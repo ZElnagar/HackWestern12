@@ -10,7 +10,9 @@ import {
   ExternalLink,
   FileText,
   ArrowRight,
-  Wallet
+  Wallet,
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -24,6 +26,7 @@ import {
 } from 'recharts';
 import ChatAssistant from './ChatAssistant';
 import HealthRing from './HealthRing';
+import { swapMeal } from '../services/geminiService';
 
 interface Props {
   data: DietPlanResponse;
@@ -40,16 +43,61 @@ const NUTRIENT_DISPLAY_CONFIG: Record<string, { label: string; unit: string; col
   zinc_mg: { label: 'Zinc', unit: 'mg', colorClass: 'bg-slate-100 border-slate-200 text-slate-700' },
 };
 
-const ResultsView: React.FC<Props> = ({ data, questionnaire }) => {
+const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire }) => {
+  const [data, setData] = useState<DietPlanResponse>(initialData);
   const [activeTab, setActiveTab] = useState<'overview' | 'plan' | 'shopping'>('overview');
+  const [swappingState, setSwappingState] = useState<{ dayIndex: number; mealIndex: number } | null>(null);
 
-  const macroData = data.mealPlan.map((day, index) => ({
-    name: `Day ${index + 1}`,
-    protein: day.estimatedNutrition.protein_g,
-    carbs: day.estimatedNutrition.carbs_g,
-    fat: day.estimatedNutrition.fat_g,
-    calories: day.estimatedNutrition.calories
-  }));
+  const handleSwapMeal = async (dayIndex: number, mealIndex: number, currentMeal: { description: string; portions: string }) => {
+      if (swappingState) return; // Prevent multiple swaps at once
+      
+      setSwappingState({ dayIndex, mealIndex });
+
+      try {
+          // Estimate calories per meal (roughly total / 3 for now, or improve later)
+          const dailyCals = data.mealPlan[dayIndex].estimatedNutrition.calories;
+          const estimatedMealCals = Math.round(dailyCals / 3); 
+
+          const newMeal = await swapMeal(
+              currentMeal.description,
+              estimatedMealCals,
+              questionnaire?.dietaryRestrictions || '',
+              questionnaire?.allergies || ''
+          );
+
+          // Update state deeply
+          setData(prevData => {
+              const newData = { ...prevData };
+              const updatedDay = { ...newData.mealPlan[dayIndex] };
+              const updatedMeals = [...updatedDay.meals];
+              
+              updatedMeals[mealIndex] = {
+                  ...updatedMeals[mealIndex],
+                  description: newMeal.description,
+                  portions: newMeal.portions,
+                  substitutions: `Swapped: ${newMeal.reason}` // Add swap reason as a note
+              };
+
+              updatedDay.meals = updatedMeals;
+              newData.mealPlan[dayIndex] = updatedDay;
+
+              // Update Shopping List
+              if (newMeal.ingredientsToAdd && newMeal.ingredientsToAdd.length > 0) {
+                  // Simple addition logic: Add new ingredients to the list
+                  // Ideally we would remove old ones, but that requires deeper knowledge of ingredient mapping
+                  newData.shoppingList = [...newData.shoppingList, ...newMeal.ingredientsToAdd];
+              }
+
+              return newData;
+          });
+
+      } catch (error) {
+          console.error("Failed to swap meal", error);
+          alert("Could not swap meal at this time. Please try again.");
+      } finally {
+          setSwappingState(null);
+      }
+  };
 
   const renderNutrientCard = (key: string, value: number | null, isMain: boolean = false) => {
     // We now render even if value is present, as per new requirement to show required amounts regardless of health
@@ -258,26 +306,7 @@ const ResultsView: React.FC<Props> = ({ data, questionnaire }) => {
 
         {activeTab === 'plan' && (
             <div className="space-y-8">
-                 {/* Charts */}
-                <div className="bg-white p-6 rounded-xl shadow-md">
-                    <h3 className="text-lg font-bold mb-4 text-slate-700">Macro Distribution (7 Days)</h3>
-                    <p className="text-sm text-slate-500 mb-4">Showing daily caloric and macro breakdown. The average across these 7 days meets your targets.</p>
-                    <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={macroData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="name" tick={{fontSize: 12}} />
-                                <YAxis tick={{fontSize: 12}} />
-                                <Tooltip 
-                                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                                />
-                                <Bar dataKey="protein" name="Protein (g)" fill="#0d9488" stackId="a" />
-                                <Bar dataKey="carbs" name="Carbs (g)" fill="#94a3b8" stackId="a" />
-                                <Bar dataKey="fat" name="Fat (g)" fill="#cbd5e1" stackId="a" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+                {/* Removed Macro Graph per user request */}
 
                 {/* Meal Cards */}
                 <div className="space-y-6">
@@ -293,14 +322,33 @@ const ResultsView: React.FC<Props> = ({ data, questionnaire }) => {
                             </div>
                             <div className="p-6 space-y-6">
                                 {day.meals.map((meal, mIdx) => (
-                                    <div key={mIdx} className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0">
+                                    <div key={mIdx} className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0 group">
                                         <div className="w-24 text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{meal.name}</div>
                                         <div className="flex-1">
-                                            <div className="font-semibold text-slate-800">{meal.description}</div>
+                                            <div className="flex justify-between items-start">
+                                                <div className="font-semibold text-slate-800">{meal.description}</div>
+                                                <button 
+                                                    onClick={() => handleSwapMeal(i, mIdx, meal)}
+                                                    disabled={swappingState !== null}
+                                                    className={`ml-4 px-3 py-1.5 rounded-md border transition-all flex items-center gap-2 text-sm font-medium ${
+                                                        swappingState?.dayIndex === i && swappingState?.mealIndex === mIdx 
+                                                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                                        : 'bg-white text-teal-600 border-teal-200 hover:bg-teal-50 hover:border-teal-300 shadow-sm'
+                                                    }`}
+                                                    title="Swap this meal for an alternative"
+                                                >
+                                                    {swappingState?.dayIndex === i && swappingState?.mealIndex === mIdx ? (
+                                                        <Loader2 size={14} className="animate-spin"/>
+                                                    ) : (
+                                                        <RefreshCw size={14} />
+                                                    )}
+                                                    {swappingState?.dayIndex === i && swappingState?.mealIndex === mIdx ? 'Swapping...' : 'Swap'}
+                                                </button>
+                                            </div>
                                             <div className="text-sm text-teal-600 mt-1 font-medium">{meal.portions}</div>
                                             {meal.substitutions && (
                                                 <div className="text-xs text-slate-500 mt-1 italic">
-                                                    Note: {meal.substitutions}
+                                                    {meal.substitutions}
                                                 </div>
                                             )}
                                         </div>

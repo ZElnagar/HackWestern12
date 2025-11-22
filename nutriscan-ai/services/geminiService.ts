@@ -109,6 +109,13 @@ export const generateDietPlan = async (
     4. **Action**: Provide an implementation checklist and follow-up questions.
     5. **Sources**: Provide 3 evidence-based sources.
 
+    **CRITICAL - MEAL PORTION FORMAT**:
+    When generating the meal plan, the 'portions' field MUST be specific and measurement-based. 
+    - BAD: "1 serving of chicken salad"
+    - GOOD: "6oz (170g) grilled chicken breast, 2 cups mixed greens, 1 tbsp olive oil dressing"
+    - GOOD: "1.5 cups cooked quinoa, 1/2 cup black beans, 1/4 avocado"
+    Do NOT use generic "serving" language. Use cups, ounces, grams, tablespoons, pieces, etc.
+
     Constraints:
     - **Safety First**: If findings are severe (e.g., severe jaundice, cachexia), recommend immediate medical referral with High confidence.
     - **Restrictions**: Strictly honor allergies (${data.allergies || 'None'}) and religious rules (${data.religiousRestrictions || 'None'}).
@@ -189,4 +196,56 @@ export const sendChatMessage = async (
         console.error("Chat Error", e);
         return "I'm having trouble connecting right now. Please try again.";
     }
+};
+
+export const swapMeal = async (
+  mealDescription: string,
+  currentCalories: number,
+  dietaryRestrictions: string,
+  allergies: string
+): Promise<{ description: string; portions: string; reason: string; ingredientsToAdd: string[] }> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const prompt = `
+    The user wants to swap a meal in their diet plan.
+    
+    **Original Meal:** "${mealDescription}"
+    **Caloric Target:** ~${currentCalories} calories
+    **Constraints:**
+    - Dietary Restrictions: ${dietaryRestrictions || 'None'}
+    - Allergies: ${allergies || 'None'}
+    
+    **Task:**
+    Generate ONE alternative meal option that:
+    1. Has similar caloric value (~${currentCalories}).
+    2. Offers similar macro-nutrient profile (Protein/Carbs/Fat).
+    3. Is distinct from the original (e.g., if original is chicken, suggest fish or tofu).
+    4. Strictly adheres to the restrictions/allergies.
+    
+    **Output Format (JSON only):**
+    {
+      "description": "Name and detailed description of the new meal (e.g., 'Grilled Salmon with Quinoa and Asparagus')",
+      "portions": "Precise serving details (e.g., '6oz (approx. 170g) Atlantic salmon fillet, 1.25 cups cooked quinoa, 1 cup roasted asparagus spears, prepared with 1.5 tbsp olive oil')",
+      "reason": "Brief explanation of why this is a good swap (e.g. 'Similar protein content but lower sodium')",
+      "ingredientsToAdd": ["List", "of", "ingredients", "for", "shopping", "list"]
+    }
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("No response from AI");
+
+    return JSON.parse(text) as { description: string; portions: string; reason: string; ingredientsToAdd: string[] };
+  } catch (error) {
+    console.error("Meal Swap Failed:", error);
+    throw error;
+  }
 };

@@ -8,6 +8,8 @@ interface Props {
 }
 
 const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
+  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
+  
   const [formData, setFormData] = useState<QuestionnaireData>({
     age: 30,
     sex: 'female',
@@ -24,15 +26,75 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
     weeklyBudget: 120,
   });
 
+  // Separate state for imperial display values
+  const [imperialData, setImperialData] = useState({
+    weightLbs: Math.round(70 * 2.20462),
+    heightFt: 5,
+    heightIn: 7 // 170cm approx 5'7"
+  });
+
   const [isSyncing, setIsSyncing] = useState(false);
   const [wearableData, setWearableData] = useState<WearableData | undefined>(undefined);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'age' || name === 'weightKg' || name === 'heightCm' || name === 'weeklyBudget' ? Number(value) : value
-    }));
+    
+    if (name === 'age' || name === 'weeklyBudget') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value === '' ? '' : Number(value)
+        }));
+        return;
+    }
+
+    // Handle metric inputs
+    if (unitSystem === 'metric') {
+      if (name === 'weightKg' || name === 'heightCm') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value === '' ? '' : Number(value)
+        }));
+        
+        // Keep imperial values in sync roughly for switching
+        if (value !== '') {
+           const val = Number(value);
+           if (name === 'weightKg') {
+             setImperialData(prev => ({ ...prev, weightLbs: Math.round(val * 2.20462) }));
+           } else if (name === 'heightCm') {
+             const totalInches = val / 2.54;
+             setImperialData(prev => ({ 
+               ...prev, 
+               heightFt: Math.floor(totalInches / 12), 
+               heightIn: Math.round(totalInches % 12) 
+             }));
+           }
+        }
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+        // Generic non-measurement inputs
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleImperialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === '' ? '' : Number(value);
+
+    setImperialData(prev => {
+        const newData = { ...prev, [name]: numValue };
+        
+        // Update main formData (Metric) immediately
+        if (name === 'weightLbs' && numValue !== '') {
+            setFormData(f => ({ ...f, weightKg: Math.round(Number(numValue) / 2.20462) }));
+        } else if ((name === 'heightFt' || name === 'heightIn') && newData.heightFt !== '' && newData.heightIn !== '') {
+            const totalInches = (Number(newData.heightFt) * 12) + Number(newData.heightIn);
+            setFormData(f => ({ ...f, heightCm: Math.round(totalInches * 2.54) }));
+        }
+        
+        return newData;
+    });
   };
 
   const handleSyncWearable = async () => {
@@ -56,7 +118,28 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Final consistency check before submit
+    let finalData = { ...formData };
+    
+    // Ensure numeric values are clean numbers
+    finalData.age = Number(finalData.age);
+    finalData.weeklyBudget = Number(finalData.weeklyBudget);
+
+    // If in imperial mode, ensure the metric conversion is authoritative
+    if (unitSystem === 'imperial') {
+        const lbs = Number(imperialData.weightLbs);
+        const ft = Number(imperialData.heightFt);
+        const inches = Number(imperialData.heightIn);
+        
+        finalData.weightKg = Math.round(lbs / 2.20462);
+        finalData.heightCm = Math.round(((ft * 12) + inches) * 2.54);
+    } else {
+        finalData.weightKg = Number(formData.weightKg);
+        finalData.heightCm = Number(formData.heightCm);
+    }
+
+    onSubmit(finalData);
   };
 
   return (
@@ -72,10 +155,31 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Biometrics */}
         <section>
-          <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">1</div>
-            Biometrics
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">1</div>
+                Biometrics
+            </h3>
+            
+            {/* Unit Toggle */}
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                    type="button"
+                    onClick={() => setUnitSystem('metric')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'metric' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Metric (kg/cm)
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setUnitSystem('imperial')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'imperial' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Imperial (lbs/ft)
+                </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
@@ -84,7 +188,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                 name="age"
                 value={formData.age}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                 required
               />
             </div>
@@ -94,34 +198,77 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                 name="sex"
                 value={formData.sex}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
               >
                 <option value="female">Female</option>
                 <option value="male">Male</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Weight (kg)</label>
-              <input
-                type="number"
-                name="weightKg"
-                value={formData.weightKg}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Height (cm)</label>
-              <input
-                type="number"
-                name="heightCm"
-                value={formData.heightCm}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                required
-              />
-            </div>
+            
+            {unitSystem === 'metric' ? (
+                <>
+                    <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Weight (kg)</label>
+                    <input
+                        type="number"
+                        name="weightKg"
+                        value={formData.weightKg}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                        required
+                    />
+                    </div>
+                    <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Height (cm)</label>
+                    <input
+                        type="number"
+                        name="heightCm"
+                        value={formData.heightCm}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                        required
+                    />
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Weight (lbs)</label>
+                    <input
+                        type="number"
+                        name="weightLbs"
+                        value={imperialData.weightLbs}
+                        onChange={handleImperialChange}
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                        required
+                    />
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Height (ft)</label>
+                            <input
+                                type="number"
+                                name="heightFt"
+                                value={imperialData.heightFt}
+                                onChange={handleImperialChange}
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                                required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">(in)</label>
+                            <input
+                                type="number"
+                                name="heightIn"
+                                value={imperialData.heightIn}
+                                onChange={handleImperialChange}
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                                required
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
           </div>
           
           {formData.sex === 'female' && (
@@ -132,7 +279,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                   name="pregnancyStatus"
                   value={formData.pregnancyStatus}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                 >
                   <option value="not_pregnant">Not Pregnant</option>
                   <option value="pregnant_t1">First Trimester</option>
@@ -146,7 +293,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                   name="breastfeedingStatus"
                   value={formData.breastfeedingStatus}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                 >
                   <option value="not_breastfeeding">No</option>
                   <option value="breastfeeding_exclusive">Exclusive</option>
@@ -165,7 +312,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                     name="activityLevel"
                     value={formData.activityLevel}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                   >
                     <option value="sedentary">Sedentary (Little or no exercise)</option>
                     <option value="light">Lightly Active (Light exercise 1-3 days/week)</option>
@@ -267,7 +414,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                 placeholder="e.g., Peanuts, Gluten, Shellfish"
                 value={formData.allergies}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
               />
             </div>
 
@@ -279,7 +426,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                 placeholder="e.g., Halal, Kosher, No Pork, Vegan"
                 value={formData.religiousRestrictions}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
               />
             </div>
 
@@ -291,7 +438,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                 placeholder="e.g., Warfarin, Metformin, Statins (Optional)"
                 value={formData.medications}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
               />
               <p className="text-xs text-slate-400 mt-1">Used to check for food-drug interactions.</p>
             </div>
@@ -303,7 +450,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                   name="dietPreferences"
                   value={formData.dietPreferences}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                 >
                   <option value="omnivore">No Preference (Omnivore)</option>
                   <option value="vegetarian">Vegetarian</option>
@@ -321,7 +468,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
                     placeholder="e.g., Mushrooms, Cilantro"
                     value={formData.dislikedFoods}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
                   />
               </div>
             </div>

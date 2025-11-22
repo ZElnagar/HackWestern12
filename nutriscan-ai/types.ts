@@ -98,3 +98,9 @@ export interface ChatMessage {
     role: 'user' | 'model';
     text: string;
 }
+
+export interface SwappedMeal {
+  description: string;
+  portions: string;
+  reason: string;
+}
