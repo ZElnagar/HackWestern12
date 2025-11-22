@@ -83,7 +83,17 @@ export const RESPONSE_SCHEMA: Schema = {
     },
     shoppingList: {
       type: Type.ARRAY,
-      items: { type: Type.STRING }
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          category: { type: Type.STRING },
+          items: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        },
+        required: ["category", "items"]
+      }
     },
     estimatedWeeklyCost: { type: Type.NUMBER },
     implementationChecklist: {

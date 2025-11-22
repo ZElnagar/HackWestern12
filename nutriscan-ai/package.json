@@ -10,17 +10,18 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
+    "@tailwindcss/postcss": "^4.1.17",
+    "autoprefixer": "^10.4.22",
     "lucide-react": "^0.554.0",
+    "postcss": "^8.5.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "recharts": "^3.4.1"
+    "recharts": "^3.4.1",
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
     "@types/node": "^22.19.1",
     "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.22",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.17",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

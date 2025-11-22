@@ -116,6 +116,9 @@ export const generateDietPlan = async (
     - GOOD: "1.5 cups cooked quinoa, 1/2 cup black beans, 1/4 avocado"
     Do NOT use generic "serving" language. Use cups, ounces, grams, tablespoons, pieces, etc.
 
+    **SHOPPING LIST FORMAT**:
+    Organize the shopping list into logical categories (e.g., "Produce", "Proteins", "Grains", "Pantry").
+
     Constraints:
     - **Safety First**: If findings are severe (e.g., severe jaundice, cachexia), recommend immediate medical referral with High confidence.
     - **Restrictions**: Strictly honor allergies (${data.allergies || 'None'}) and religious rules (${data.religiousRestrictions || 'None'}).

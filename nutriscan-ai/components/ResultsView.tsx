@@ -83,9 +83,25 @@ const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire }) => {
 
               // Update Shopping List
               if (newMeal.ingredientsToAdd && newMeal.ingredientsToAdd.length > 0) {
-                  // Simple addition logic: Add new ingredients to the list
-                  // Ideally we would remove old ones, but that requires deeper knowledge of ingredient mapping
-                  newData.shoppingList = [...newData.shoppingList, ...newMeal.ingredientsToAdd];
+                  // Check if a "Swapped Items" category already exists
+                  const swappedCategoryIndex = newData.shoppingList.findIndex(cat => cat.category === "Swapped Items");
+                  
+                  if (swappedCategoryIndex >= 0) {
+                      // Append to existing category
+                      const updatedCategory = {
+                          ...newData.shoppingList[swappedCategoryIndex],
+                          items: [...newData.shoppingList[swappedCategoryIndex].items, ...newMeal.ingredientsToAdd]
+                      };
+                      const newShoppingList = [...newData.shoppingList];
+                      newShoppingList[swappedCategoryIndex] = updatedCategory;
+                      newData.shoppingList = newShoppingList;
+                  } else {
+                      // Create new category
+                      newData.shoppingList = [
+                          ...newData.shoppingList,
+                          { category: "Swapped Items", items: newMeal.ingredientsToAdd }
+                      ];
+                  }
               }
 
               return newData;
@@ -382,11 +398,20 @@ const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire }) => {
                         </div>
                    </div>
                 </div>
-                <div className="columns-1 md:columns-2 gap-8 space-y-4">
-                    {data.shoppingList.map((item, i) => (
-                         <div key={i} className="flex items-start gap-3 break-inside-avoid">
-                            <input type="checkbox" className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500" />
-                            <span className="text-slate-700">{item}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {data.shoppingList.map((category, idx) => (
+                        <div key={idx} className="bg-slate-50 p-6 rounded-xl border border-slate-200 break-inside-avoid">
+                            <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg">
+                                {category.category}
+                            </h4>
+                            <div className="space-y-3">
+                                {category.items.map((item, i) => (
+                                    <div key={i} className="flex items-start gap-3">
+                                        <input type="checkbox" className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 bg-white" />
+                                        <span className="text-slate-700 text-sm">{item}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>

@@ -33,6 +33,16 @@ export interface QuestionnaireData {
   wearableData?: WearableData | null; // Optional integration data
 }
 
+export interface ShoppingItem {
+  item: string;
+  checked?: boolean; // Optional for UI state
+}
+
+export interface ShoppingCategory {
+  category: string;
+  items: string[];
+}
+
 // Matches the JSON Schema provided in the prompt
 export interface DietPlanResponse {
   summary: string;
@@ -77,7 +87,7 @@ export interface DietPlanResponse {
       fat_g: number;
     };
   }[];
-  shoppingList: string[];
+  shoppingList: ShoppingCategory[];
   estimatedWeeklyCost: number; // New field
   implementationChecklist: string[];
   followUpQuestions: string[];
