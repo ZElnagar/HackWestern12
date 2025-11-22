@@ -13,6 +13,8 @@ import {
   Wallet,
   Save,
   Pill,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import {
   BarChart,
@@ -25,6 +27,8 @@ import {
   ReferenceLine,
 } from "recharts";
 import ChatAssistant from "./ChatAssistant";
+import HealthRing from "./HealthRing";
+import { swapMeal } from "../services/geminiService";
 
 interface Props {
   data: DietPlanResponse;
@@ -76,23 +80,95 @@ const NUTRIENT_DISPLAY_CONFIG: Record<
 };
 
 const ResultsView: React.FC<Props> = ({
-  data,
+  data: initialData,
   questionnaire,
   onSave,
   isSaved,
   scanMode,
 }) => {
+  const [data, setData] = useState<DietPlanResponse>(initialData);
   const [activeTab, setActiveTab] = useState<"overview" | "plan" | "shopping">(
     "overview"
   );
+  const [swappingState, setSwappingState] = useState<{
+    dayIndex: number;
+    mealIndex: number;
+  } | null>(null);
 
-  const macroData = data.mealPlan.map((day, index) => ({
-    name: `Day ${index + 1}`,
-    protein: day.estimatedNutrition.protein_g,
-    carbs: day.estimatedNutrition.carbs_g,
-    fat: day.estimatedNutrition.fat_g,
-    calories: day.estimatedNutrition.calories,
-  }));
+  const handleSwapMeal = async (
+    dayIndex: number,
+    mealIndex: number,
+    currentMeal: { description: string; portions: string }
+  ) => {
+    if (swappingState) return; // Prevent multiple swaps at once
+
+    setSwappingState({ dayIndex, mealIndex });
+
+    try {
+      // Estimate calories per meal (roughly total / 3 for now, or improve later)
+      const dailyCals = data.mealPlan[dayIndex].estimatedNutrition.calories;
+      const estimatedMealCals = Math.round(dailyCals / 3);
+
+      const newMeal = await swapMeal(
+        currentMeal.description,
+        estimatedMealCals,
+        questionnaire?.dietaryRestrictions || "",
+        questionnaire?.allergies || ""
+      );
+
+      // Update state deeply
+      setData((prevData) => {
+        const newData = { ...prevData };
+        const updatedDay = { ...newData.mealPlan[dayIndex] };
+        const updatedMeals = [...updatedDay.meals];
+
+        updatedMeals[mealIndex] = {
+          ...updatedMeals[mealIndex],
+          description: newMeal.description,
+          portions: newMeal.portions,
+          substitutions: `Swapped: ${newMeal.reason}`, // Add swap reason as a note
+        };
+
+        updatedDay.meals = updatedMeals;
+        newData.mealPlan[dayIndex] = updatedDay;
+
+        // Update Shopping List
+        if (newMeal.ingredientsToAdd && newMeal.ingredientsToAdd.length > 0) {
+          // Check if a "Swapped Items" category already exists
+          const swappedCategoryIndex = newData.shoppingList.findIndex(
+            (cat) => cat.category === "Swapped Items"
+          );
+
+          if (swappedCategoryIndex >= 0) {
+            // Append to existing category
+            const updatedCategory = {
+              ...newData.shoppingList[swappedCategoryIndex],
+              items: [
+                ...newData.shoppingList[swappedCategoryIndex].items,
+                ...newMeal.ingredientsToAdd,
+              ],
+            };
+            const newShoppingList = [...newData.shoppingList];
+            newShoppingList[swappedCategoryIndex] = updatedCategory;
+            newData.shoppingList = newShoppingList;
+          } else {
+            // Create new category
+            newData.shoppingList = [
+              ...newData.shoppingList,
+              { category: "Swapped Items", items: newMeal.ingredientsToAdd },
+            ];
+          }
+        }
+
+        return newData;
+      });
+    } catch (error) {
+      console.error("Failed to swap meal", error);
+      alert("Could not swap meal at this time. Please try again.");
+    } finally {
+      setSwappingState(null);
+    }
+  };
 
   const renderNutrientCard = (
     key: string,
@@ -132,10 +208,82 @@ const ResultsView: React.FC<Props> = ({
     );
   };
 
+  // Safe check for nutritionScore existence in case of older cached data or partial API response
+  const hasScore = data.nutritionScore && data.nutritionScore.breakdown;
+
   return (
     <div className="w-full max-w-6xl mx-auto pb-20 relative">
       {/* Chat Assistant Integration */}
       <ChatAssistant results={data} questionnaire={questionnaire || null} />
+
+      {/* Nutrition Score Section */}
+      {hasScore && (
+        <div className="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-slate-100">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              Your Nutrition Health Score
+            </h2>
+            <p className="text-slate-500">
+              Based on your visual scan and health questionnaire
+            </p>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+            {/* Main Score Ring */}
+            <div className="flex flex-col items-center">
+              <HealthRing
+                score={data.nutritionScore.total}
+                label="Overall Score"
+                size="large"
+              />
+              <div className="mt-4 text-center">
+                <div
+                  className={`text-lg font-bold ${
+                    data.nutritionScore.total >= 80
+                      ? "text-green-600"
+                      : data.nutritionScore.total >= 60
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {data.nutritionScore.total >= 80
+                    ? "Optimal"
+                    : data.nutritionScore.total >= 60
+                    ? "Needs Improvement"
+                    : "At Risk"}
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block w-px h-32 bg-slate-200"></div>
+
+            {/* Mini Rings Grid */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+              <HealthRing
+                score={data.nutritionScore.breakdown.protein}
+                label="Protein"
+                color="#3b82f6" // Blue
+              />
+              <HealthRing
+                score={data.nutritionScore.breakdown.vitamins}
+                label="Vitamins"
+                color="#8b5cf6" // Purple
+              />
+              <HealthRing
+                score={data.nutritionScore.breakdown.hydration}
+                label="Hydration"
+                color="#06b6d4" // Cyan
+              />
+              <HealthRing
+                score={data.nutritionScore.breakdown.calories}
+                label="Calories"
+                color="#f97316" // Orange
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header Summary */}
       <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
@@ -337,52 +485,7 @@ const ResultsView: React.FC<Props> = ({
 
         {activeTab === "plan" && (
           <div className="space-y-8">
-            {/* Charts - Hidden for Hand Scan */}
-            {scanMode !== "hands" && (
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <h3 className="text-lg font-bold mb-4 text-slate-700">
-                  Macro Distribution (7 Days)
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  Showing daily caloric and macro breakdown. The average across
-                  these 7 days meets your targets.
-                </p>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={macroData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: "8px",
-                          border: "none",
-                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                        }}
-                      />
-                      <Bar
-                        dataKey="protein"
-                        name="Protein (g)"
-                        fill="#0d9488"
-                        stackId="a"
-                      />
-                      <Bar
-                        dataKey="carbs"
-                        name="Carbs (g)"
-                        fill="#94a3b8"
-                        stackId="a"
-                      />
-                      <Bar
-                        dataKey="fat"
-                        name="Fat (g)"
-                        fill="#cbd5e1"
-                        stackId="a"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
+            {/* Removed Macro Graph per user request */}
 
             {/* Meal Cards */}
             <div className="space-y-6">
@@ -396,29 +499,53 @@ const ResultsView: React.FC<Props> = ({
                       <Calendar size={18} className="text-teal-600" /> {day.day}
                     </h4>
                     <div className="text-xs text-slate-500">
-                      {scanMode !== "hands" &&
-                        `${day.estimatedNutrition.calories} kcal • P: ${day.estimatedNutrition.protein_g}g`}
+                      {day.estimatedNutrition.calories} kcal • P:{" "}
+                      {day.estimatedNutrition.protein_g}g
                     </div>
                   </div>
                   <div className="p-6 space-y-6">
                     {day.meals.map((meal, mIdx) => (
                       <div
                         key={mIdx}
-                        className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0"
+                        className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0 group"
                       >
                         <div className="w-24 text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
                           {meal.name}
                         </div>
                         <div className="flex-1">
-                          <div className="font-semibold text-slate-800">
-                            {meal.description}
+                          <div className="flex justify-between items-start">
+                            <div className="font-semibold text-slate-800">
+                              {meal.description}
+                            </div>
+                            <button
+                              onClick={() => handleSwapMeal(i, mIdx, meal)}
+                              disabled={swappingState !== null}
+                              className={`ml-4 px-3 py-1.5 rounded-md border transition-all flex items-center gap-2 text-sm font-medium ${
+                                swappingState?.dayIndex === i &&
+                                swappingState?.mealIndex === mIdx
+                                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                  : "bg-white text-teal-600 border-teal-200 hover:bg-teal-50 hover:border-teal-300 shadow-sm"
+                              }`}
+                              title="Swap this meal for an alternative"
+                            >
+                              {swappingState?.dayIndex === i &&
+                              swappingState?.mealIndex === mIdx ? (
+                                <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                <RefreshCw size={14} />
+                              )}
+                              {swappingState?.dayIndex === i &&
+                              swappingState?.mealIndex === mIdx
+                                ? "Swapping..."
+                                : "Swap"}
+                            </button>
                           </div>
                           <div className="text-sm text-teal-600 mt-1 font-medium">
                             {meal.portions}
                           </div>
                           {meal.substitutions && (
                             <div className="text-xs text-slate-500 mt-1 italic">
-                              Note: {meal.substitutions}
+                              {meal.substitutions}
                             </div>
                           )}
                         </div>
@@ -466,17 +593,27 @@ const ResultsView: React.FC<Props> = ({
                 </div>
               </div>
             </div>
-            <div className="columns-1 md:columns-2 gap-8 space-y-4">
-              {data.shoppingList.map((item, i) => (
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {data.shoppingList.map((category, idx) => (
                 <div
-                  key={i}
-                  className="flex items-start gap-3 break-inside-avoid"
+                  key={idx}
+                  className="bg-slate-50 p-6 rounded-xl border border-slate-200 break-inside-avoid"
                 >
-                  <input
-                    type="checkbox"
-                    className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">{item}</span>
+                  <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg">
+                    {category.category}
+                  </h4>
+                  <div className="space-y-3">
+                    {category.items.map((item, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 bg-white"
+                        />
+                        <span className="text-slate-700 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

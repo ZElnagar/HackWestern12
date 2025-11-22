@@ -6,6 +6,23 @@ export const RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
     summary: { type: Type.STRING },
+    nutritionScore: {
+      type: Type.OBJECT,
+      properties: {
+        total: { type: Type.NUMBER, description: "Overall health score from 0-100 based on analysis" },
+        breakdown: {
+          type: Type.OBJECT,
+          properties: {
+            protein: { type: Type.NUMBER, description: "0-100 score for protein intake/status" },
+            vitamins: { type: Type.NUMBER, description: "0-100 score for vitamin status based on visual signs" },
+            hydration: { type: Type.NUMBER, description: "0-100 score for hydration status" },
+            calories: { type: Type.NUMBER, description: "0-100 score for caloric balance" }
+          },
+          required: ["protein", "vitamins", "hydration", "calories"]
+        }
+      },
+      required: ["total", "breakdown"]
+    },
     interpretation: {
       type: Type.ARRAY,
       items: {
@@ -66,9 +83,19 @@ export const RESPONSE_SCHEMA: Schema = {
     },
     shoppingList: {
       type: Type.ARRAY,
-      items: { type: Type.STRING }
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          category: { type: Type.STRING },
+          items: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        },
+        required: ["category", "items"]
+      }
     },
-    estimatedWeeklyCost: { type: Type.NUMBER, description: "Estimated total cost in CAD based on Ontario pricing" },
+    estimatedWeeklyCost: { type: Type.NUMBER },
     implementationChecklist: {
       type: Type.ARRAY,
       items: { type: Type.STRING }
@@ -81,10 +108,23 @@ export const RESPONSE_SCHEMA: Schema = {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
-        properties: { title: { type: Type.STRING }, url: { type: Type.STRING } }
+        properties: {
+          title: { type: Type.STRING },
+          url: { type: Type.STRING }
+        },
+        required: ["title", "url"]
       }
     },
     disclaimer: { type: Type.STRING }
   },
-  required: ["summary", "interpretation", "mealPlan", "implementationChecklist", "disclaimer", "estimatedWeeklyCost"]
+  required: [
+    "summary",
+    "nutritionScore",
+    "interpretation",
+    "nutrientTargets",
+    "mealPlan",
+    "shoppingList",
+    "implementationChecklist",
+    "disclaimer"
+  ]
 };

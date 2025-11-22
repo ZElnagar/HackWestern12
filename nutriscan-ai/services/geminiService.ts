@@ -3,29 +3,22 @@ import { QuestionnaireData, ImageCaptureSet, DietPlanResponse, ChatMessage } fro
 import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from "../constants";
 
 const extractImagePart = (dataUrl: string) => {
-  // Robustly parse data URLs: data:[<mediatype>][;base64],<data>
-  // Example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-  
   try {
     const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
     
     if (match && match.length === 3) {
-      const mimeType = match[1];
-      const data = match[2];
       return {
         inlineData: {
-          mimeType: mimeType, 
-          data: data 
+          mimeType: match[1], 
+          data: match[2] 
         }
       };
     } else if (dataUrl.includes(',')) {
-       // Fallback if regex fails but it looks like a data URL
        const [header, data] = dataUrl.split(',');
        const mimeMatch = header.match(/:(.*?);/);
-       const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
        return {
          inlineData: {
-           mimeType: mimeType,
+           mimeType: mimeMatch ? mimeMatch[1] : "image/jpeg",
            data: data
          }
        };
@@ -33,7 +26,6 @@ const extractImagePart = (dataUrl: string) => {
   } catch (e) {
     console.error("Error parsing image data URL:", e);
   }
-
   throw new Error("Invalid image format. Please retake the photo.");
 };
 
@@ -111,10 +103,22 @@ export const generateDietPlan = async (
 
     Task:
     1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
-    2. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
+    
+    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data. Also provide breakdown scores (0-100) for:
+       - **Protein**: Based on muscle mass signs (temporal wasting) vs healthy structure.
+       - **Vitamins**: Based on skin/eye health (pallor, dryness, etc).
+       - **Hydration**: Based on skin turgor/dryness signs.
+       - **Calories**: Based on weight/BMI and facial fat levels.
+       
+       **Scoring Guide:**
+       - 80-100 (Optimal): No visible deficits, healthy BMI, good skin tone.
+       - 60-79 (Needs Improvement): Minor signs (e.g. mild circles, slight dryness) or slightly suboptimal BMI.
+       - <60 (At Risk): Clear signs of deficiencies (pallor, wasting, cheilitis) or concerning BMI.
+
+    3. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
        ${scanMode === 'hands' ? `
        - A nutrient-target summary. Focus on the specific micronutrients identified as deficient (e.g. Iron, Zinc, Biotin).
-       - **Shopping List**: Generate a list of **RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg") instead of grocery items.
+       - **Shopping List**: Generate a list of **RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg") organized into a "Supplements" category.
        - **Meal Plan**: Provide a simple "Supplement Schedule" (Morning/Noon/Night) in the meal plan structure. You can leave calories/macros as 0 or estimates.
        - **estimatedWeeklyCost**: Estimate the cost of these supplements.
        ` : `
@@ -124,8 +128,19 @@ export const generateDietPlan = async (
        - A categorized shopping list optimized for the budget (e.g., specifying "Frozen Spinach" instead of "Fresh" if budget is tight).
        - **Calculate and return 'estimatedWeeklyCost'**: The approximate total cost of the shopping list in CAD based on Ontario pricing.
        `}
-    3. **Action**: Provide an implementation checklist and follow-up questions.
-    4. **Sources**: Provide 3 evidence-based sources.
+
+    4. **Action**: Provide an implementation checklist and follow-up questions.
+    5. **Sources**: Provide 3 evidence-based sources.
+
+    **CRITICAL - MEAL PORTION FORMAT**:
+    When generating the meal plan, the 'portions' field MUST be specific and measurement-based. 
+    - BAD: "1 serving of chicken salad"
+    - GOOD: "6oz (170g) grilled chicken breast, 2 cups mixed greens, 1 tbsp olive oil dressing"
+    - GOOD: "1.5 cups cooked quinoa, 1/2 cup black beans, 1/4 avocado"
+    Do NOT use generic "serving" language. Use cups, ounces, grams, tablespoons, pieces, etc.
+
+    **SHOPPING LIST FORMAT**:
+    Organize the shopping list into logical categories (e.g., "Produce", "Proteins", "Grains", "Pantry" OR "Supplements" if applicable).
 
     Constraints:
     - **Safety First**: If findings are severe (e.g., severe jaundice, cachexia), recommend immediate medical referral with High confidence.
@@ -134,19 +149,15 @@ export const generateDietPlan = async (
   `;
 
   const parts = [];
-
   if (images.front) parts.push(extractImagePart(images.front));
   if (images.left) parts.push(extractImagePart(images.left));
   if (images.right) parts.push(extractImagePart(images.right));
-
   parts.push({ text: userPrompt });
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: {
-        parts: parts
-      },
+      contents: { parts },
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -189,7 +200,6 @@ export const sendChatMessage = async (
         - If they ask about medical diagnoses, remind them you are an AI assistant and they should see a doctor.
     `;
 
-    // Reconstruct history for the API (exclude system, it's in config)
     const historyForApi = history.map(h => ({
         role: h.role,
         parts: [{ text: h.text }]
@@ -212,4 +222,56 @@ export const sendChatMessage = async (
         console.error("Chat Error", e);
         return "I'm having trouble connecting right now. Please try again.";
     }
+};
+
+export const swapMeal = async (
+  mealDescription: string,
+  currentCalories: number,
+  dietaryRestrictions: string,
+  allergies: string
+): Promise<{ description: string; portions: string; reason: string; ingredientsToAdd: string[] }> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const prompt = `
+    The user wants to swap a meal in their diet plan.
+    
+    **Original Meal:** "${mealDescription}"
+    **Caloric Target:** ~${currentCalories} calories
+    **Constraints:**
+    - Dietary Restrictions: ${dietaryRestrictions || 'None'}
+    - Allergies: ${allergies || 'None'}
+    
+    **Task:**
+    Generate ONE alternative meal option that:
+    1. Has similar caloric value (~${currentCalories}).
+    2. Offers similar macro-nutrient profile (Protein/Carbs/Fat).
+    3. Is distinct from the original (e.g., if original is chicken, suggest fish or tofu).
+    4. Strictly adheres to the restrictions/allergies.
+    
+    **Output Format (JSON only):**
+    {
+      "description": "Name and detailed description of the new meal (e.g., 'Grilled Salmon with Quinoa and Asparagus')",
+      "portions": "Precise serving details (e.g., '6oz (approx. 170g) Atlantic salmon fillet, 1.25 cups cooked quinoa, 1 cup roasted asparagus spears, prepared with 1.5 tbsp olive oil')",
+      "reason": "Brief explanation of why this is a good swap (e.g. 'Similar protein content but lower sodium')",
+      "ingredientsToAdd": ["List", "of", "ingredients", "for", "shopping", "list"]
+    }
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("No response from AI");
+
+    return JSON.parse(text) as { description: string; portions: string; reason: string; ingredientsToAdd: string[] };
+  } catch (error) {
+    console.error("Meal Swap Failed:", error);
+    throw error;
+  }
 };

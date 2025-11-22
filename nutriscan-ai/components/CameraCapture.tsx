@@ -139,35 +139,42 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       // Use JPEG to ensure consistent mime type for the API
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
-      const stepId = steps[currentStep].id;
-      setCaptures((prev) => ({ ...prev, [stepId]: dataUrl }));
+      // Safely access the step ID
+      if (currentStep >= 0 && currentStep < steps.length) {
+        const stepId = steps[currentStep].id;
+        setCaptures((prev) => ({ ...prev, [stepId]: dataUrl }));
 
-      // Auto advance removed to allow user to review and click next manually
+        // Auto advance removed to allow user to review and click next manually
+      }
     }
   };
 
   const handleSkip = () => {
-    const stepId = steps[currentStep].id;
-    // Explicitly set to null to indicate skipped
-    setCaptures((prev) => ({ ...prev, [stepId]: null }));
+    if (currentStep >= 0 && currentStep < steps.length) {
+      const stepId = steps[currentStep].id;
+      // Explicitly set to null to indicate skipped
+      setCaptures((prev) => ({ ...prev, [stepId]: null }));
 
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-      setVideoReady(false);
-    } else {
-      // If skipping the last step, we can finish
-      // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
-      if (captures.front) {
-        // Need to defer calling onComplete to state update
-        // But here we just update step, the user will see "Complete" button if front is there.
+      if (currentStep < steps.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+        setVideoReady(false);
+      } else {
+        // If skipping the last step, we can finish
+        // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
+        if (captures.front) {
+          // Need to defer calling onComplete to state update
+          // But here we just update step, the user will see "Complete" button if front is there.
+        }
       }
     }
   };
 
   const handleRetake = () => {
-    const stepId = steps[currentStep].id;
-    setCaptures((prev) => ({ ...prev, [stepId]: null }));
-    setVideoReady(false);
+    if (currentStep >= 0 && currentStep < steps.length) {
+      const stepId = steps[currentStep].id;
+      setCaptures((prev) => ({ ...prev, [stepId]: null }));
+      setVideoReady(false);
+    }
   };
 
   const handleFinish = () => {
@@ -204,8 +211,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     );
   }
 
-  const currentCapture =
-    captures[steps[currentStep].id as keyof ImageCaptureSet];
+  // Safe access for render variables
+  const currentStepData = steps[currentStep];
+  if (!currentStepData) {
+    return null; // Or render a loading/error state
+  }
+
+  const currentCapture = captures[currentStepData.id as keyof ImageCaptureSet];
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -214,7 +226,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           Visual Health Scan
         </h2>
         <span className="text-sm font-medium px-3 py-1 bg-teal-100 text-teal-700 rounded-full">
-          Step {currentStep + 1} of 3: {steps[currentStep].label}
+          Step {currentStep + 1} of 3: {currentStepData.label}
         </span>
       </div>
 
@@ -222,7 +234,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         {/* Instructions Overlay */}
         <div className="absolute top-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
           <div className="bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg animate-fade-in">
-            {steps[currentStep].instruction}
+            {currentStepData.instruction}
           </div>
         </div>
 
@@ -329,7 +341,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               }`}
             >
               <Camera size={24} />
-              Capture {steps[currentStep].label}
+              Capture {currentStepData.label}
             </button>
           </div>
         )}
