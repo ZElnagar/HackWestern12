@@ -32,7 +32,17 @@ const App: React.FC = () => {
 
   const handleCameraComplete = (capturedImages: ImageCaptureSet) => {
     setImages(capturedImages);
-    setAppState(AppState.QUESTIONNAIRE);
+
+    // If we already have questionnaire data (from previous run or profile), skip the form
+    if (questionnaire) {
+      performAnalysis(capturedImages, questionnaire);
+    } else if (user?.currentProfile) {
+      // Use the user's saved profile if available
+      setQuestionnaire(user.currentProfile);
+      performAnalysis(capturedImages, user.currentProfile);
+    } else {
+      setAppState(AppState.QUESTIONNAIRE);
+    }
   };
 
   const performAnalysis = async (
@@ -100,6 +110,7 @@ const App: React.FC = () => {
         date: new Date().toISOString(),
         results: results,
         questionnaire: questionnaire,
+        scanType: scanMode,
       };
 
       setUser({

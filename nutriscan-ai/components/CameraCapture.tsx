@@ -36,19 +36,14 @@ const FACE_STEPS = [
 
 const HAND_STEPS = [
   {
-    id: "front",
-    label: "Fingernails",
-    instruction: "Place your hand flat, showing your fingernails clearly.",
-  },
-  {
     id: "left",
-    label: "Palms",
-    instruction: "Turn your hand over to show your palm.",
+    label: "Left Hand",
+    instruction: "Place your LEFT hand flat, showing fingernails and skin.",
   },
   {
     id: "right",
-    label: "Skin Texture",
-    instruction: "Bring your hand closer to show skin texture.",
+    label: "Right Hand",
+    instruction: "Place your RIGHT hand flat, showing fingernails and skin.",
   },
 ];
 
@@ -175,9 +170,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   };
 
   const handleFinish = () => {
-    // Only front face is strictly required
-    if (captures.front) {
-      onComplete(captures);
+    if (mode === "hands") {
+      // For hands, at least one hand should be captured
+      if (captures.left || captures.right) {
+        onComplete(captures);
+      }
+    } else {
+      // Only front face is strictly required
+      if (captures.front) {
+        onComplete(captures);
+      }
     }
   };
 

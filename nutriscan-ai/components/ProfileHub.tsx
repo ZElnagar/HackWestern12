@@ -1,6 +1,15 @@
-import React from 'react';
-import { User, PastAssessment } from '../types';
-import { User as UserIcon, Calendar, ChevronRight, Activity, LogOut, LayoutDashboard } from 'lucide-react';
+import React from "react";
+import { User, PastAssessment } from "../types";
+import {
+  User as UserIcon,
+  Calendar,
+  ChevronRight,
+  Activity,
+  LogOut,
+  LayoutDashboard,
+  ScanFace,
+  Hand,
+} from "lucide-react";
 
 interface ProfileHubProps {
   user: User;
@@ -9,11 +18,16 @@ interface ProfileHubProps {
   onBackToDashboard: () => void;
 }
 
-const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogout, onBackToDashboard }) => {
+const ProfileHub: React.FC<ProfileHubProps> = ({
+  user,
+  onViewAssessment,
+  onLogout,
+  onBackToDashboard,
+}) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Navigation */}
-      <button 
+      <button
         onClick={onBackToDashboard}
         className="flex items-center gap-2 text-slate-500 hover:text-teal-600 transition-colors font-medium"
       >
@@ -27,20 +41,30 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogou
           <UserIcon className="text-teal-600" size={48} />
         </div>
         <div className="flex-1 text-center md:text-left">
-          <h2 className="text-3xl font-bold text-slate-800 mb-2">My Health Hub</h2>
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">
+            My Health Hub
+          </h2>
           <p className="text-slate-500 mb-4">{user.email}</p>
           <div className="flex flex-wrap gap-4 justify-center md:justify-start">
             <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="text-xs text-slate-400 uppercase font-bold block">Member Since</span>
-              <span className="text-slate-700 font-medium">{new Date(user.joinedDate).toLocaleDateString()}</span>
+              <span className="text-xs text-slate-400 uppercase font-bold block">
+                Member Since
+              </span>
+              <span className="text-slate-700 font-medium">
+                {new Date(user.joinedDate).toLocaleDateString()}
+              </span>
             </div>
             <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="text-xs text-slate-400 uppercase font-bold block">Assessments</span>
-              <span className="text-slate-700 font-medium">{user.history.length}</span>
+              <span className="text-xs text-slate-400 uppercase font-bold block">
+                Assessments
+              </span>
+              <span className="text-slate-700 font-medium">
+                {user.history.length}
+              </span>
             </div>
           </div>
         </div>
-        <button 
+        <button
           onClick={onLogout}
           className="flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
         >
@@ -65,24 +89,33 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogou
                     {user.currentProfile.age} yrs • {user.currentProfile.sex}
                   </p>
                   <p className="text-slate-700">
-                    {user.currentProfile.heightCm}cm • {user.currentProfile.weightKg}kg
+                    {user.currentProfile.heightCm}cm •{" "}
+                    {user.currentProfile.weightKg}kg
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Dietary Preferences</p>
-                  <p className="text-slate-700">{user.currentProfile.dietPreferences || "None"}</p>
+                  <p className="text-slate-700">
+                    {user.currentProfile.dietPreferences || "None"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Allergies</p>
-                  <p className="text-slate-700">{user.currentProfile.allergies || "None"}</p>
+                  <p className="text-slate-700">
+                    {user.currentProfile.allergies || "None"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Goal</p>
-                  <p className="text-slate-700 capitalize">{user.currentProfile.activityLevel.replace('_', ' ')}</p>
+                  <p className="text-slate-700 capitalize">
+                    {user.currentProfile.activityLevel.replace("_", " ")}
+                  </p>
                 </div>
               </div>
             ) : (
-              <p className="text-slate-500 italic">No profile data available yet.</p>
+              <p className="text-slate-500 italic">
+                No profile data available yet.
+              </p>
             )}
           </div>
         </div>
@@ -94,31 +127,52 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogou
               <Calendar className="text-teal-600" />
               Assessment History
             </h3>
-            
+
             {user.history.length > 0 ? (
               <div className="space-y-4">
-                {user.history.slice().reverse().map((assessment) => (
-                  <button
-                    key={assessment.id}
-                    onClick={() => onViewAssessment(assessment)}
-                    className="w-full text-left bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 p-4 rounded-xl transition-all group flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-800 mb-1">
-                        {new Date(assessment.date).toLocaleDateString(undefined, { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        {assessment.results.summary.substring(0, 60)}...
-                      </p>
-                    </div>
-                    <ChevronRight className="text-slate-300 group-hover:text-teal-600 transition-colors" />
-                  </button>
-                ))}
+                {user.history
+                  .slice()
+                  .reverse()
+                  .map((assessment) => (
+                    <button
+                      key={assessment.id}
+                      onClick={() => onViewAssessment(assessment)}
+                      className="w-full text-left bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 p-4 rounded-xl transition-all group flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`p-2 rounded-full ${
+                            assessment.scanType === "hands"
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-teal-100 text-teal-600"
+                          }`}
+                        >
+                          {assessment.scanType === "hands" ? (
+                            <Hand size={20} />
+                          ) : (
+                            <ScanFace size={20} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 mb-1">
+                            {new Date(assessment.date).toLocaleDateString(
+                              undefined,
+                              {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {assessment.results.summary.substring(0, 60)}...
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="text-slate-300 group-hover:text-teal-600 transition-colors" />
+                    </button>
+                  ))}
               </div>
             ) : (
               <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">

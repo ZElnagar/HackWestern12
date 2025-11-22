@@ -15,6 +15,7 @@ export interface PastAssessment {
   date: string;
   results: DietPlanResponse;
   questionnaire: QuestionnaireData;
+  scanType?: 'face' | 'hands';
 }
 
 export interface User {
