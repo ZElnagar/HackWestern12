@@ -329,12 +329,11 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
 
                   <button
                     type="button"
-                    onClick={handleSyncWearable}
-                    disabled={isSyncing}
-                    className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-600 hover:border-teal-500 hover:text-teal-600 transition-colors"
+                    disabled={true}
+                    className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center gap-2 text-slate-400 cursor-not-allowed bg-slate-50"
                   >
-                    {isSyncing ? <Loader2 className="animate-spin" /> : <Watch size={20} />}
-                    {isSyncing ? "Syncing Health Data..." : "Connect Google Fit / Apple Health"}
+                    <Watch size={20} />
+                    Connect Google Fit / Apple Health (Coming Soon)
                   </button>
                 </div>
              ) : (
@@ -369,7 +368,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
         <section>
           <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">2</div>
-            Budget (Ontario, CA Pricing)
+            Weekly Budget (Ontario, CA Pricing)
           </h3>
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
             <div className="flex items-center justify-between mb-2">

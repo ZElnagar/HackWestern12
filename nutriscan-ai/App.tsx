@@ -298,7 +298,9 @@ const App: React.FC = () => {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {renderContent()}
+        <div key={appState} className="animate-fade-scale">
+          {renderContent()}
+        </div>
       </main>
 
       {/* Save Notification Toast */}

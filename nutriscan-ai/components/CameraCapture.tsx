@@ -19,7 +19,7 @@ const FACE_STEPS = [
   {
     id: "front",
     label: "Front Face",
-    instruction: "Look directly at the camera. Ensure good lighting.",
+    instruction: "Look directly at the camera. Remove any glasses. Ensure good lighting.",
   },
   {
     id: "left",
@@ -130,10 +130,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      // Mirror the capture to match the preview
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
+      // Draw normally without mirroring
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // Use JPEG to ensure consistent mime type for the API
@@ -251,7 +248,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             playsInline
             muted
             onCanPlay={handleVideoCanPlay}
-            className={`w-full h-full object-cover transform scale-x-[-1] transition-opacity duration-300 ${
+            className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
               videoReady ? "opacity-100" : "opacity-0"
             }`}
           />
@@ -267,22 +264,27 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         {/* Guide Grid */}
         {!currentCapture && videoReady && (
-          <div className="absolute inset-0 pointer-events-none opacity-40">
+          <div className="absolute inset-0 pointer-events-none opacity-40 flex items-center justify-center">
             {mode === "hands" ? (
               // Hand Guide
               <>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[75%] h-[85%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/50 font-bold text-4xl flex flex-col items-center gap-4">
-                  <Hand size={200} strokeWidth={1} />
+                <div className="relative w-[75%] h-[85%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)] flex items-center justify-center">
+                    <Hand size={200} strokeWidth={1} className="text-white/50" />
                 </div>
               </>
             ) : (
               // Face Oval Guide
               <>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[45%] h-[65%] border-2 border-dashed border-white/70 rounded-[50%] box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
-                {/* Center Crosshair */}
-                <div className="absolute top-1/2 left-0 right-0 border-t border-white/20"></div>
-                <div className="absolute top-0 bottom-0 left-1/2 border-l border-white/20"></div>
+                {/* Center Crosshair - using flex centering wrapper to ensure they cross in middle */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-full border-l border-white/20"></div>
+                </div>
+
+                {/* Oval Shape */}
+                <div className="w-[45%] h-[65%] border-2 border-dashed border-white/70 rounded-[50%] box-border shadow-[0_0_15px_rgba(0,0,0,0.3)] z-10"></div>
               </>
             )}
           </div>

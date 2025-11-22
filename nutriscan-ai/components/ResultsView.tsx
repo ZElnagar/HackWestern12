@@ -446,40 +446,6 @@ const ResultsView: React.FC<Props> = ({
               </div>
             </section>
 
-            {/* Sources & Questions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                  <Info size={18} className="text-blue-500" /> Follow-up
-                  Questions
-                </h4>
-                <ul className="list-disc list-inside space-y-2 text-slate-600 text-sm">
-                  {data.followUpQuestions.map((q, i) => (
-                    <li key={i}>{q}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                  <ExternalLink size={18} className="text-blue-500" />{" "}
-                  References
-                </h4>
-                <ul className="space-y-2 text-sm">
-                  {data.sources.map((s, i) => (
-                    <li key={i}>
-                      <a
-                        href={s.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-teal-600 hover:underline flex items-center gap-1"
-                      >
-                        {s.title} <ExternalLink size={12} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
           </div>
         )}
 
