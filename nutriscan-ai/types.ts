@@ -2,9 +2,26 @@ export enum AppState {
   LANDING = 'LANDING',
   CAMERA = 'CAMERA',
   QUESTIONNAIRE = 'QUESTIONNAIRE',
+  AUTH = 'AUTH',
   ANALYZING = 'ANALYZING',
   RESULTS = 'RESULTS',
+  PROFILE = 'PROFILE',
   ERROR = 'ERROR'
+}
+
+export interface PastAssessment {
+  id: string;
+  date: string;
+  results: DietPlanResponse;
+  questionnaire: QuestionnaireData;
+}
+
+export interface User {
+  email: string;
+  password?: string; // In a real app, don't store this in plain text/state like this
+  joinedDate: string;
+  currentProfile?: QuestionnaireData;
+  history: PastAssessment[];
 }
 
 export interface WearableData {
