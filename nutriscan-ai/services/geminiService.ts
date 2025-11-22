@@ -3,29 +3,22 @@ import { QuestionnaireData, ImageCaptureSet, DietPlanResponse, ChatMessage } fro
 import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from "../constants";
 
 const extractImagePart = (dataUrl: string) => {
-  // Robustly parse data URLs: data:[<mediatype>][;base64],<data>
-  // Example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-  
   try {
     const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
     
     if (match && match.length === 3) {
-      const mimeType = match[1];
-      const data = match[2];
       return {
         inlineData: {
-          mimeType: mimeType, 
-          data: data 
+          mimeType: match[1], 
+          data: match[2] 
         }
       };
     } else if (dataUrl.includes(',')) {
-       // Fallback if regex fails but it looks like a data URL
        const [header, data] = dataUrl.split(',');
        const mimeMatch = header.match(/:(.*?);/);
-       const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
        return {
          inlineData: {
-           mimeType: mimeType,
+           mimeType: mimeMatch ? mimeMatch[1] : "image/jpeg",
            data: data
          }
        };
@@ -33,7 +26,6 @@ const extractImagePart = (dataUrl: string) => {
   } catch (e) {
     console.error("Error parsing image data URL:", e);
   }
-
   throw new Error("Invalid image format. Please retake the photo.");
 };
 
@@ -43,7 +35,6 @@ export const generateDietPlan = async (
 ): Promise<DietPlanResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // Enhanced Prompt for detailed multi-angle analysis with BUDGET constraints
   const userPrompt = `
     I have attached available images of the patient (Front is mandatory, Profile views are optional) for a comprehensive nutritional assessment.
     
@@ -98,14 +89,25 @@ export const generateDietPlan = async (
 
     Task:
     1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
-    2. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
+    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data. Also provide breakdown scores (0-100) for:
+       - **Protein**: Based on muscle mass signs (temporal wasting) vs healthy structure.
+       - **Vitamins**: Based on skin/eye health (pallor, dryness, etc).
+       - **Hydration**: Based on skin turgor/dryness signs.
+       - **Calories**: Based on weight/BMI and facial fat levels.
+       
+       **Scoring Guide:**
+       - 80-100 (Optimal): No visible deficits, healthy BMI, good skin tone.
+       - 60-79 (Needs Improvement): Minor signs (e.g. mild circles, slight dryness) or slightly suboptimal BMI.
+       - <60 (At Risk): Clear signs of deficiencies (pallor, wasting, cheilitis) or concerning BMI.
+
+    3. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
        - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Iron, B12, D, Folate, Zinc) based on the patient's age, sex, and biometrics. Do NOT return null.**
        - A 7-day meal plan. **ENSURE the 7-day plan averages out to meet the daily nutrient targets AND fits within the $${data.weeklyBudget} CAD budget.**
        - Substitutions for restrictions.
        - A categorized shopping list optimized for the budget (e.g., specifying "Frozen Spinach" instead of "Fresh" if budget is tight).
        - **Calculate and return 'estimatedWeeklyCost'**: The approximate total cost of the shopping list in CAD based on Ontario pricing.
-    3. **Action**: Provide an implementation checklist and follow-up questions.
-    4. **Sources**: Provide 3 evidence-based sources.
+    4. **Action**: Provide an implementation checklist and follow-up questions.
+    5. **Sources**: Provide 3 evidence-based sources.
 
     Constraints:
     - **Safety First**: If findings are severe (e.g., severe jaundice, cachexia), recommend immediate medical referral with High confidence.
@@ -114,19 +116,15 @@ export const generateDietPlan = async (
   `;
 
   const parts = [];
-
   if (images.front) parts.push(extractImagePart(images.front));
   if (images.left) parts.push(extractImagePart(images.left));
   if (images.right) parts.push(extractImagePart(images.right));
-
   parts.push({ text: userPrompt });
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: {
-        parts: parts
-      },
+      contents: { parts },
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -169,7 +167,6 @@ export const sendChatMessage = async (
         - If they ask about medical diagnoses, remind them you are an AI assistant and they should see a doctor.
     `;
 
-    // Reconstruct history for the API (exclude system, it's in config)
     const historyForApi = history.map(h => ({
         role: h.role,
         parts: [{ text: h.text }]

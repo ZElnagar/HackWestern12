@@ -1,3 +1,5 @@
+import { Schema, Type } from "@google/genai";
+
 export enum AppState {
   LANDING = 'LANDING',
   CAMERA = 'CAMERA',
@@ -8,35 +10,42 @@ export enum AppState {
 }
 
 export interface WearableData {
-  provider: 'google_fit' | 'apple_health' | 'fitbit' | null;
+  provider: 'google_fit' | 'fitbit' | 'apple_health';
   dailySteps: number;
+  activeCaloriesBurned: number;
   averageSleepHours: number;
-  activeCaloriesBurned: number; // Above resting metabolic rate
   restingHeartRate?: number;
   lastSynced: string;
 }
 
 export interface QuestionnaireData {
-  allergies: string; // comma separated
-  religiousRestrictions: string; // comma separated
-  dietPreferences: string;
-  dislikedFoods: string;
-  medications: string;
   age: number;
   sex: string;
-  pregnancyStatus: string;
-  breastfeedingStatus: string;
-  weightKg: number;
-  heightCm: number;
+  weight: number;
+  height: number;
   activityLevel: string;
-  targetCalories?: number;
-  weeklyBudget: number; // New field in CAD
-  wearableData?: WearableData; // Optional integration data
+  dietaryRestrictions: string;
+  allergies: string;
+  religiousRestrictions: string; // New field
+  medications: string;
+  primaryGoal: string;
+  weeklyBudget: number; // New field for budget
+  wearableData?: WearableData | null; // Optional integration data
 }
 
 // Matches the JSON Schema provided in the prompt
 export interface DietPlanResponse {
   summary: string;
+  // New Score Fields
+  nutritionScore: {
+    total: number; // 0-100
+    breakdown: {
+      protein: number; // 0-100
+      vitamins: number; // 0-100
+      hydration: number; // 0-100
+      calories: number; // 0-100
+    };
+  };
   interpretation: {
     finding: string;
     confidence: "High" | "Medium" | "Low";
@@ -86,6 +95,6 @@ export interface ImageCaptureSet {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
+    role: 'user' | 'model';
+    text: string;
 }

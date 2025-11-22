@@ -23,6 +23,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import ChatAssistant from './ChatAssistant';
+import HealthRing from './HealthRing';
 
 interface Props {
   data: DietPlanResponse;
@@ -71,10 +72,70 @@ const ResultsView: React.FC<Props> = ({ data, questionnaire }) => {
     );
   };
 
+  // Safe check for nutritionScore existence in case of older cached data or partial API response
+  const hasScore = data.nutritionScore && data.nutritionScore.breakdown;
+
   return (
     <div className="w-full max-w-6xl mx-auto pb-20 relative">
       {/* Chat Assistant Integration */}
       <ChatAssistant results={data} questionnaire={questionnaire || null} />
+
+      {/* Nutrition Score Section */}
+      {hasScore && (
+        <div className="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-slate-100">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Your Nutrition Health Score</h2>
+            <p className="text-slate-500">Based on your visual scan and health questionnaire</p>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+            {/* Main Score Ring */}
+            <div className="flex flex-col items-center">
+               <HealthRing 
+                 score={data.nutritionScore.total} 
+                 label="Overall Score" 
+                 size="large" 
+               />
+               <div className="mt-4 text-center">
+                 <div className={`text-lg font-bold ${
+                   data.nutritionScore.total >= 80 ? 'text-green-600' : 
+                   data.nutritionScore.total >= 60 ? 'text-yellow-600' : 'text-red-600'
+                 }`}>
+                   {data.nutritionScore.total >= 80 ? 'Optimal' : 
+                    data.nutritionScore.total >= 60 ? 'Needs Improvement' : 'At Risk'}
+                 </div>
+               </div>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block w-px h-32 bg-slate-200"></div>
+
+            {/* Mini Rings Grid */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+              <HealthRing 
+                score={data.nutritionScore.breakdown.protein} 
+                label="Protein" 
+                color="#3b82f6" // Blue
+              />
+              <HealthRing 
+                score={data.nutritionScore.breakdown.vitamins} 
+                label="Vitamins" 
+                color="#8b5cf6" // Purple
+              />
+              <HealthRing 
+                score={data.nutritionScore.breakdown.hydration} 
+                label="Hydration" 
+                color="#06b6d4" // Cyan
+              />
+              <HealthRing 
+                score={data.nutritionScore.breakdown.calories} 
+                label="Calories" 
+                color="#f97316" // Orange
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header Summary */}
       <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl">

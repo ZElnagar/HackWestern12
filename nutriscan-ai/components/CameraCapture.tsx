@@ -92,41 +92,48 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
       // Use JPEG to ensure consistent mime type for the API
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       
-      const stepId = CAPTURE_STEPS[currentStep].id;
-      setCaptures(prev => ({ ...prev, [stepId]: dataUrl }));
-      
-      // Auto advance after short delay for UX
-      setTimeout(() => {
-         if (currentStep < CAPTURE_STEPS.length - 1) {
-             setCurrentStep(prev => prev + 1);
-             setVideoReady(false); // Reset ready state for next view
-         }
-      }, 400);
-    }
-  };
-
-  const handleSkip = () => {
-    const stepId = CAPTURE_STEPS[currentStep].id;
-    // Explicitly set to null to indicate skipped
-    setCaptures(prev => ({ ...prev, [stepId]: null }));
-    
-    if (currentStep < CAPTURE_STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
-      setVideoReady(false);
-    } else {
-      // If skipping the last step, we can finish
-      // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
-      if (captures.front) {
-        // Need to defer calling onComplete to state update
-        // But here we just update step, the user will see "Complete" button if front is there.
+      // Safely access the step ID
+      if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
+          const stepId = CAPTURE_STEPS[currentStep].id;
+          setCaptures(prev => ({ ...prev, [stepId]: dataUrl }));
+          
+          // Auto advance after short delay for UX
+          setTimeout(() => {
+             if (currentStep < CAPTURE_STEPS.length - 1) {
+                 setCurrentStep(prev => prev + 1);
+                 setVideoReady(false); // Reset ready state for next view
+             }
+          }, 400);
       }
     }
   };
 
+  const handleSkip = () => {
+     if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
+        const stepId = CAPTURE_STEPS[currentStep].id;
+        // Explicitly set to null to indicate skipped
+        setCaptures(prev => ({ ...prev, [stepId]: null }));
+        
+        if (currentStep < CAPTURE_STEPS.length - 1) {
+          setCurrentStep(prev => prev + 1);
+          setVideoReady(false);
+        } else {
+          // If skipping the last step, we can finish
+          // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
+          if (captures.front) {
+            // Need to defer calling onComplete to state update
+            // But here we just update step, the user will see "Complete" button if front is there.
+          }
+        }
+    }
+  };
+
   const handleRetake = () => {
-    const stepId = CAPTURE_STEPS[currentStep].id;
-    setCaptures(prev => ({ ...prev, [stepId]: null }));
-    setVideoReady(false);
+    if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
+        const stepId = CAPTURE_STEPS[currentStep].id;
+        setCaptures(prev => ({ ...prev, [stepId]: null }));
+        setVideoReady(false);
+    }
   };
 
   const handleFinish = () => {
@@ -154,14 +161,20 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
     );
   }
 
-  const currentCapture = captures[CAPTURE_STEPS[currentStep].id as keyof ImageCaptureSet];
+  // Safe access for render variables
+  const currentStepData = CAPTURE_STEPS[currentStep];
+  if (!currentStepData) {
+      return null; // Or render a loading/error state
+  }
+
+  const currentCapture = captures[currentStepData.id as keyof ImageCaptureSet];
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-slate-800">Visual Health Scan</h2>
         <span className="text-sm font-medium px-3 py-1 bg-teal-100 text-teal-700 rounded-full">
-          Step {currentStep + 1} of 3: {CAPTURE_STEPS[currentStep].label}
+          Step {currentStep + 1} of 3: {currentStepData.label}
         </span>
       </div>
 
@@ -169,7 +182,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
         {/* Instructions Overlay */}
         <div className="absolute top-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
             <div className="bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg animate-fade-in">
-                {CAPTURE_STEPS[currentStep].instruction}
+                {currentStepData.instruction}
             </div>
         </div>
 
@@ -253,8 +266,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
                 disabled={!videoReady}
                 className={`flex items-center gap-2 px-8 py-4 font-semibold rounded-full transition shadow-lg hover:shadow-xl transform active:scale-95 ${videoReady ? 'bg-teal-600 text-white hover:bg-teal-700' : 'bg-slate-400 text-slate-200 cursor-not-allowed'}`}
             >
-                <Camera size={24} />
-                Capture {CAPTURE_STEPS[currentStep].label}
+              <Camera size={24} />
+              Capture {currentStepData.label}
             </button>
           </div>
         )}
