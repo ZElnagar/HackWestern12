@@ -6,6 +6,7 @@ export enum AppState {
   ANALYZING = 'ANALYZING',
   RESULTS = 'RESULTS',
   PROFILE = 'PROFILE',
+  DASHBOARD = 'DASHBOARD',
   ERROR = 'ERROR'
 }
 

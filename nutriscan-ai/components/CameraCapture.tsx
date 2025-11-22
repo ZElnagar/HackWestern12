@@ -95,13 +95,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
       const stepId = CAPTURE_STEPS[currentStep].id;
       setCaptures(prev => ({ ...prev, [stepId]: dataUrl }));
       
-      // Auto advance after short delay for UX
-      setTimeout(() => {
-         if (currentStep < CAPTURE_STEPS.length - 1) {
-             setCurrentStep(prev => prev + 1);
-             setVideoReady(false); // Reset ready state for next view
-         }
-      }, 400);
+      // Auto advance removed to allow user to review and click next manually
     }
   };
 
