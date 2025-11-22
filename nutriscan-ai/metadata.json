@@ -1,0 +1,7 @@
+{
+  "name": "NutriScan AI",
+  "description": "AI-assisted patient intake tool analyzing visual health cues and dietary needs.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
