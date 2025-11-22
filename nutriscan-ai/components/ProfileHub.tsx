@@ -1,16 +1,26 @@
 import React from 'react';
 import { User, PastAssessment } from '../types';
-import { User as UserIcon, Calendar, ChevronRight, Activity, LogOut } from 'lucide-react';
+import { User as UserIcon, Calendar, ChevronRight, Activity, LogOut, LayoutDashboard } from 'lucide-react';
 
 interface ProfileHubProps {
   user: User;
   onViewAssessment: (assessment: PastAssessment) => void;
   onLogout: () => void;
+  onBackToDashboard: () => void;
 }
 
-const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogout }) => {
+const ProfileHub: React.FC<ProfileHubProps> = ({ user, onViewAssessment, onLogout, onBackToDashboard }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Navigation */}
+      <button 
+        onClick={onBackToDashboard}
+        className="flex items-center gap-2 text-slate-500 hover:text-teal-600 transition-colors font-medium"
+      >
+        <LayoutDashboard size={20} />
+        Back to Dashboard
+      </button>
+
       {/* Header Section */}
       <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="bg-teal-100 p-6 rounded-full">

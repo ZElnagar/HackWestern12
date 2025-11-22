@@ -6,6 +6,7 @@ import ResultsView from './components/ResultsView';
 import AuthScreen from './components/AuthScreen';
 import ProfileButton from './components/ProfileButton';
 import ProfileHub from './components/ProfileHub';
+import Dashboard from './components/Dashboard';
 import { generateDietPlan } from './services/geminiService';
 import { ScanFace, Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isResultSaved, setIsResultSaved] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
 
   const handleCameraComplete = (capturedImages: ImageCaptureSet) => {
     setImages(capturedImages);
@@ -64,8 +66,8 @@ const App: React.FC = () => {
     if (images && questionnaire) {
       performAnalysis(images, questionnaire);
     } else {
-      // If just logging in without a flow (future proofing), go to profile
-      setAppState(AppState.PROFILE);
+      // If just logging in without a flow, go to dashboard
+      setAppState(AppState.DASHBOARD);
     }
   };
 
@@ -92,6 +94,13 @@ const App: React.FC = () => {
         history: [...user.history, newAssessment]
       });
       setIsResultSaved(true);
+      setShowSaveNotification(true);
+      
+      // Delay navigation to show the notification
+      setTimeout(() => {
+        setShowSaveNotification(false);
+        setAppState(AppState.DASHBOARD);
+      }, 2000);
     }
   };
 
@@ -138,12 +147,16 @@ const App: React.FC = () => {
       case AppState.AUTH:
         return <AuthScreen onComplete={handleAuthComplete} />;
 
+      case AppState.DASHBOARD:
+        return <Dashboard onStartFaceScan={() => setAppState(AppState.CAMERA)} />;
+
       case AppState.PROFILE:
         return user ? (
           <ProfileHub 
             user={user} 
             onViewAssessment={handleViewAssessment} 
-            onLogout={handleLogout} 
+            onLogout={handleLogout}
+            onBackToDashboard={() => setAppState(AppState.DASHBOARD)}
           />
         ) : null;
 
@@ -197,7 +210,7 @@ const App: React.FC = () => {
                   <span className="font-bold text-xl text-slate-900">NutriScan AI</span>
               </div>
               <div className="flex items-center gap-4">
-                {appState !== AppState.LANDING && appState !== AppState.PROFILE && (
+                {appState !== AppState.LANDING && appState !== AppState.PROFILE && appState !== AppState.DASHBOARD && (
                     <div className="text-sm font-medium text-slate-500 hidden md:block">
                         {appState === AppState.CAMERA && "Step 1: Scan"}
                         {appState === AppState.QUESTIONNAIRE && "Step 2: Profile"}
@@ -206,7 +219,9 @@ const App: React.FC = () => {
                         {appState === AppState.RESULTS && "Results"}
                     </div>
                 )}
-                {user && <ProfileButton onClick={() => setAppState(AppState.PROFILE)} />}
+                {user && (appState === AppState.RESULTS || appState === AppState.DASHBOARD || appState === AppState.PROFILE) && (
+                  <ProfileButton onClick={() => setAppState(AppState.PROFILE)} />
+                )}
               </div>
           </div>
        </nav>
@@ -214,6 +229,16 @@ const App: React.FC = () => {
        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {renderContent()}
        </main>
+
+       {/* Save Notification Toast */}
+       {showSaveNotification && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4 fade-in z-50">
+          <div className="bg-teal-500 rounded-full p-1">
+            <ScanFace size={16} className="text-white" />
+          </div>
+          <span className="font-medium">Assessment Saved To Profile Hub</span>
+        </div>
+       )}
     </div>
   );
 };
