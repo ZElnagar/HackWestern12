@@ -36,6 +36,7 @@ interface Props {
   onSave: () => void;
   isSaved: boolean;
   scanMode?: "full" | "face" | "hands";
+  onDone: () => void;
 }
 
 const NUTRIENT_DISPLAY_CONFIG: Record<
@@ -85,6 +86,7 @@ const ResultsView: React.FC<Props> = ({
   onSave,
   isSaved,
   scanMode,
+  onDone
 }) => {
   const [data, setData] = useState<DietPlanResponse>(initialData);
   const [activeTab, setActiveTab] = useState<"overview" | "plan" | "shopping">(
@@ -94,6 +96,25 @@ const ResultsView: React.FC<Props> = ({
     dayIndex: number;
     mealIndex: number;
   } | null>(null);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  const handleDoneClick = () => {
+    if (!isSaved) {
+      setShowUnsavedModal(true);
+    } else {
+      onDone();
+    }
+  };
+
+  const handleConfirmExit = () => {
+    setShowUnsavedModal(false);
+    onDone();
+  };
+
+  const handleSaveAndExit = () => {
+    onSave();
+    setShowUnsavedModal(false);
+  };
 
   const handleSwapMeal = async (
     dayIndex: number,
@@ -594,6 +615,53 @@ const ResultsView: React.FC<Props> = ({
         </strong>
         {data.disclaimer}
       </div>
+
+      {/* Done Button */}
+      <div className="mt-8">
+        <button 
+          onClick={handleDoneClick}
+          className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+        >
+          Done
+          <ArrowRight size={20} />
+        </button>
+      </div>
+
+      {/* Unsaved Changes Modal */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
+            <div className="flex items-center gap-3 mb-4 text-amber-600">
+              <AlertTriangle size={32} />
+              <h3 className="text-2xl font-bold text-slate-800">Unsaved Assessment</h3>
+            </div>
+            <p className="text-slate-600 mb-8">
+              You haven't saved your assessment results yet. Would you like to save them to your profile before exiting?
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={handleSaveAndExit}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                <Save size={20} />
+                Save & Exit
+              </button>
+              <button
+                onClick={handleConfirmExit}
+                className="w-full bg-white border-2 border-slate-200 hover:border-red-200 text-slate-700 hover:text-red-600 font-bold py-3 rounded-xl transition-colors"
+              >
+                Exit Without Saving
+              </button>
+              <button
+                onClick={() => setShowUnsavedModal(false)}
+                className="w-full text-slate-400 hover:text-slate-600 font-medium py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
