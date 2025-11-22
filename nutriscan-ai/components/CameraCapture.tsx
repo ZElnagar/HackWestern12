@@ -94,37 +94,31 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onComplete }) => {
       
       // Safely access the step ID
       if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
-          const stepId = CAPTURE_STEPS[currentStep].id;
-          setCaptures(prev => ({ ...prev, [stepId]: dataUrl }));
-          
-          // Auto advance after short delay for UX
-          setTimeout(() => {
-             if (currentStep < CAPTURE_STEPS.length - 1) {
-                 setCurrentStep(prev => prev + 1);
-                 setVideoReady(false); // Reset ready state for next view
-             }
-          }, 400);
+        const stepId = CAPTURE_STEPS[currentStep].id;
+        setCaptures(prev => ({ ...prev, [stepId]: dataUrl }));
+        
+        // Auto advance removed to allow user to review and click next manually
       }
     }
   };
 
   const handleSkip = () => {
-     if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
-        const stepId = CAPTURE_STEPS[currentStep].id;
-        // Explicitly set to null to indicate skipped
-        setCaptures(prev => ({ ...prev, [stepId]: null }));
-        
-        if (currentStep < CAPTURE_STEPS.length - 1) {
-          setCurrentStep(prev => prev + 1);
-          setVideoReady(false);
-        } else {
-          // If skipping the last step, we can finish
-          // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
-          if (captures.front) {
-            // Need to defer calling onComplete to state update
-            // But here we just update step, the user will see "Complete" button if front is there.
-          }
+    if (currentStep >= 0 && currentStep < CAPTURE_STEPS.length) {
+      const stepId = CAPTURE_STEPS[currentStep].id;
+      // Explicitly set to null to indicate skipped
+      setCaptures(prev => ({ ...prev, [stepId]: null }));
+      
+      if (currentStep < CAPTURE_STEPS.length - 1) {
+        setCurrentStep(prev => prev + 1);
+        setVideoReady(false);
+      } else {
+        // If skipping the last step, we can finish
+        // However, handleFinish needs at least front to be present, which is step 0 (unskippable in UI below)
+        if (captures.front) {
+          // Need to defer calling onComplete to state update
+          // But here we just update step, the user will see "Complete" button if front is there.
         }
+      }
     }
   };
 

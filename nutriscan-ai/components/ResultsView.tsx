@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Wallet,
   RefreshCw,
-  Loader2
+  Loader2,
+  Save
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -30,7 +31,9 @@ import { swapMeal } from '../services/geminiService';
 
 interface Props {
   data: DietPlanResponse;
-  questionnaire?: QuestionnaireData | null; // Optional for backward compatibility if needed, but App passes it
+  questionnaire?: QuestionnaireData | null;
+  onSave: () => void;
+  isSaved: boolean;
 }
 
 const NUTRIENT_DISPLAY_CONFIG: Record<string, { label: string; unit: string; colorClass: string; icon?: React.ReactNode }> = {
@@ -43,7 +46,7 @@ const NUTRIENT_DISPLAY_CONFIG: Record<string, { label: string; unit: string; col
   zinc_mg: { label: 'Zinc', unit: 'mg', colorClass: 'bg-slate-100 border-slate-200 text-slate-700' },
 };
 
-const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire }) => {
+const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire, onSave, isSaved }) => {
   const [data, setData] = useState<DietPlanResponse>(initialData);
   const [activeTab, setActiveTab] = useState<'overview' | 'plan' | 'shopping'>('overview');
   const [swappingState, setSwappingState] = useState<{ dayIndex: number; mealIndex: number } | null>(null);
@@ -202,8 +205,31 @@ const ResultsView: React.FC<Props> = ({ data: initialData, questionnaire }) => {
       )}
 
       {/* Header Summary */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl">
-        <h2 className="text-3xl font-bold mb-4">Analysis Complete</h2>
+      <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-3xl font-bold">Analysis Complete</h2>
+          <button
+            onClick={onSave}
+            disabled={isSaved}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+              isSaved 
+                ? 'bg-white/20 text-white/80 cursor-default' 
+                : 'bg-white text-teal-700 hover:bg-teal-50 shadow-lg'
+            }`}
+          >
+            {isSaved ? (
+              <>
+                <CheckCircle size={20} />
+                Saved to Profile
+              </>
+            ) : (
+              <>
+                <Save size={20} />
+                Save Result
+              </>
+            )}
+          </button>
+        </div>
         <p className="text-lg opacity-90 leading-relaxed">{data.summary}</p>
         
         <div className="mt-6 flex flex-wrap gap-3">
