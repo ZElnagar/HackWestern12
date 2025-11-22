@@ -6,6 +6,7 @@ import {
   ChevronRight,
   AlertCircle,
   SkipForward,
+  Hand,
 } from "lucide-react";
 import { ImageCaptureSet } from "../types";
 
@@ -255,11 +256,23 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         {/* Guide Grid */}
         {!currentCapture && videoReady && (
           <div className="absolute inset-0 pointer-events-none opacity-40">
-            {/* Face Oval Guide */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[45%] h-[65%] border-2 border-dashed border-white/70 rounded-[50%] box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
-            {/* Center Crosshair */}
-            <div className="absolute top-1/2 left-0 right-0 border-t border-white/20"></div>
-            <div className="absolute top-0 bottom-0 left-1/2 border-l border-white/20"></div>
+            {mode === "hands" ? (
+              // Hand Guide
+              <>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[60%] h-[80%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/50 font-bold text-4xl flex flex-col items-center gap-4">
+                  <Hand size={120} strokeWidth={1} />
+                </div>
+              </>
+            ) : (
+              // Face Oval Guide
+              <>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[45%] h-[65%] border-2 border-dashed border-white/70 rounded-[50%] box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
+                {/* Center Crosshair */}
+                <div className="absolute top-1/2 left-0 right-0 border-t border-white/20"></div>
+                <div className="absolute top-0 bottom-0 left-1/2 border-l border-white/20"></div>
+              </>
+            )}
           </div>
         )}
       </div>

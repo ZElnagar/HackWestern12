@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Wallet,
   Save,
+  Pill,
 } from "lucide-react";
 import {
   BarChart,
@@ -189,16 +190,18 @@ const ResultsView: React.FC<Props> = ({
         >
           Clinical Findings
         </button>
-        <button
-          onClick={() => setActiveTab("plan")}
-          className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
-            activeTab === "plan"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
-          }`}
-        >
-          Meal Plan & Macros
-        </button>
+        {scanMode !== "hands" && (
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
+              activeTab === "plan"
+                ? "text-teal-600 border-b-2 border-teal-600"
+                : "text-slate-500 hover:text-teal-500"
+            }`}
+          >
+            Meal Plan & Macros
+          </button>
+        )}
         <button
           onClick={() => setActiveTab("shopping")}
           className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
@@ -207,7 +210,7 @@ const ResultsView: React.FC<Props> = ({
               : "text-slate-500 hover:text-teal-500"
           }`}
         >
-          Shopping List
+          {scanMode === "hands" ? "Recommended Supplements" : "Shopping List"}
         </button>
       </div>
 
@@ -433,14 +436,22 @@ const ResultsView: React.FC<Props> = ({
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-4">
                 <div className="bg-teal-100 p-3 rounded-full text-teal-600">
-                  <ShoppingBag size={32} />
+                  {scanMode === "hands" ? (
+                    <Pill size={32} />
+                  ) : (
+                    <ShoppingBag size={32} />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-800">
-                    Shopping List
+                    {scanMode === "hands"
+                      ? "Supplement Protocol"
+                      : "Shopping List"}
                   </h3>
                   <p className="text-slate-500">
-                    Recommended items for your 7-day plan.
+                    {scanMode === "hands"
+                      ? "Recommended vitamins & minerals based on analysis."
+                      : "Recommended items for your 7-day plan."}
                   </p>
                 </div>
               </div>

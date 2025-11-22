@@ -112,11 +112,18 @@ export const generateDietPlan = async (
     Task:
     1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
     2. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
+       ${scanMode === 'hands' ? `
+       - A nutrient-target summary. Focus on the specific micronutrients identified as deficient (e.g. Iron, Zinc, Biotin).
+       - **Shopping List**: Generate a list of **RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg") instead of grocery items.
+       - **Meal Plan**: Provide a simple "Supplement Schedule" (Morning/Noon/Night) in the meal plan structure. You can leave calories/macros as 0 or estimates.
+       - **estimatedWeeklyCost**: Estimate the cost of these supplements.
+       ` : `
        - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Iron, B12, D, Folate, Zinc) based on the patient's age, sex, and biometrics. Do NOT return null.**
        - A 7-day meal plan. **ENSURE the 7-day plan averages out to meet the daily nutrient targets AND fits within the $${data.weeklyBudget} CAD budget.**
        - Substitutions for restrictions.
        - A categorized shopping list optimized for the budget (e.g., specifying "Frozen Spinach" instead of "Fresh" if budget is tight).
        - **Calculate and return 'estimatedWeeklyCost'**: The approximate total cost of the shopping list in CAD based on Ontario pricing.
+       `}
     3. **Action**: Provide an implementation checklist and follow-up questions.
     4. **Sources**: Provide 3 evidence-based sources.
 
