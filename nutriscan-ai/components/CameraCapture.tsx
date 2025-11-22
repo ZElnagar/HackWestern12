@@ -259,9 +259,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             {mode === "hands" ? (
               // Hand Guide
               <>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[60%] h-[80%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[75%] h-[85%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)]"></div>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/50 font-bold text-4xl flex flex-col items-center gap-4">
-                  <Hand size={120} strokeWidth={1} />
+                  <Hand size={200} strokeWidth={1} />
                 </div>
               </>
             ) : (
