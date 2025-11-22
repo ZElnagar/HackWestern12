@@ -4,10 +4,11 @@ import { Mail, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 
 interface AuthScreenProps {
   onComplete: (user: User) => void;
+  defaultMode?: 'login' | 'signup';
 }
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete }) => {
-  const [isLogin, setIsLogin] = useState(false); // Default to Create Account as per flow
+const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'signup' }) => {
+  const [isLogin, setIsLogin] = useState(defaultMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

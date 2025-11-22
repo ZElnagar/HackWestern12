@@ -41,6 +41,8 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+# npm internal files (should be covered by node_modules/ but explicit for safety)
+node_modules/.package-lock.json
 
 # TypeScript v1 declaration files
 typings/
@@ -121,6 +123,8 @@ dist
 # Vite
 dist-ssr
 *.local
+.vite/
+node_modules/.vite/
 
 # OS
 .DS_Store

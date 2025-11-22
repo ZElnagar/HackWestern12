@@ -8,7 +8,7 @@ import ProfileButton from './components/ProfileButton';
 import ProfileHub from './components/ProfileHub';
 import Dashboard from './components/Dashboard';
 import { generateDietPlan } from './services/geminiService';
-import { ScanFace, Loader2 } from 'lucide-react';
+import { ScanFace, Loader2, LogIn } from 'lucide-react';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.LANDING);
@@ -126,13 +126,22 @@ const App: React.FC = () => {
               Advanced visual health screening combined with AI-driven nutrition planning. 
               Detect visible health cues and get a medically-informed diet plan in minutes.
             </p>
-            <button 
-              onClick={() => setAppState(AppState.CAMERA)}
-              className="bg-teal-600 hover:bg-teal-700 text-white text-xl font-semibold px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-            >
-              Start Assessment
-            </button>
-            <p className="mt-6 text-sm text-slate-400">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
+              <button 
+                onClick={() => setAppState(AppState.CAMERA)}
+                className="bg-teal-600 hover:bg-teal-700 text-white text-xl font-semibold px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+              >
+                Start Assessment
+              </button>
+              <button 
+                onClick={() => setAppState(AppState.AUTH)}
+                className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+              >
+                <LogIn size={24} />
+                Log In
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-slate-400">
               Requires camera access • Privacy focused (images processed for session only)
             </p>
           </div>
@@ -145,7 +154,9 @@ const App: React.FC = () => {
         return <QuestionnaireForm onSubmit={handleQuestionnaireSubmit} />;
 
       case AppState.AUTH:
-        return <AuthScreen onComplete={handleAuthComplete} />;
+        // If coming from landing page (no images/questionnaire), default to login
+        // Otherwise, default to signup for new users in the flow
+        return <AuthScreen onComplete={handleAuthComplete} defaultMode={!images && !questionnaire ? 'login' : 'signup'} />;
 
       case AppState.DASHBOARD:
         return <Dashboard onStartFaceScan={() => setAppState(AppState.CAMERA)} />;
