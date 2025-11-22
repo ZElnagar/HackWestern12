@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { QuestionnaireData, ImageCaptureSet, DietPlanResponse, ChatMessage } from "../types";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { QuestionnaireData, ImageCaptureSet, DietPlanResponse, ChatMessage, DailyCheckinData, DailyInsightResponse } from "../types";
 import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from "../constants";
 
 const extractImagePart = (dataUrl: string) => {
@@ -41,7 +41,21 @@ export const generateDietPlan = async (
   images: ImageCaptureSet,
   data: QuestionnaireData
 ): Promise<DietPlanResponse> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your .env file and ensure GEMINI_API_KEY is set.");
+  }
+  
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash",
+    systemInstruction: SYSTEM_INSTRUCTION,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA,
+      temperature: 0.4,
+    }
+  });
 
   // Enhanced Prompt for detailed multi-angle analysis with BUDGET constraints
   const userPrompt = `
@@ -98,6 +112,10 @@ export const generateDietPlan = async (
 
     Task:
     1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
+       - **CRITICAL**: For EACH finding, provide a specific, actionable recommendation in the 'recommendedLabsOrReferral' field. 
+       - If the finding is minor (e.g., dry lips), recommend a lifestyle change (e.g., "Increase water intake to 2.5L/day").
+       - If the finding is medical/severe, recommend a lab test or doctor visit.
+       - Do NOT leave 'recommendedLabsOrReferral' empty or say "None indicated".
     2. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
        - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Iron, B12, D, Folate, Zinc) based on the patient's age, sex, and biometrics. Do NOT return null.**
        - A 7-day meal plan. **ENSURE the 7-day plan averages out to meet the daily nutrient targets AND fits within the $${data.weeklyBudget} CAD budget.**
@@ -119,23 +137,13 @@ export const generateDietPlan = async (
   if (images.left) parts.push(extractImagePart(images.left));
   if (images.right) parts.push(extractImagePart(images.right));
 
-  parts.push({ text: userPrompt });
+  parts.push(userPrompt);
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: {
-        parts: parts
-      },
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-        temperature: 0.4,
-      }
-    });
-
-    const text = response.text;
+    const result = await model.generateContent(parts);
+    const response = result.response;
+    const text = response.text();
+    
     if (!text) throw new Error("No response from AI");
     
     return JSON.parse(text) as DietPlanResponse;
@@ -150,7 +158,11 @@ export const sendChatMessage = async (
     currentMessage: string,
     contextData: { questionnaire: QuestionnaireData, results: DietPlanResponse }
 ): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (!apiKey) {
+        return "Error: API Key is missing.";
+    }
+    const genAI = new GoogleGenerativeAI(apiKey);
     
     const systemInstruction = `
         You are the NutriScan AI Assistant. You have just completed a visual health analysis and diet plan generation for a user.
@@ -169,27 +181,94 @@ export const sendChatMessage = async (
         - If they ask about medical diagnoses, remind them you are an AI assistant and they should see a doctor.
     `;
 
-    // Reconstruct history for the API (exclude system, it's in config)
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      systemInstruction: systemInstruction
+    });
+
+    // Reconstruct history for the API
     const historyForApi = history.map(h => ({
         role: h.role,
         parts: [{ text: h.text }]
     }));
     
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [
-                ...historyForApi,
-                { role: 'user', parts: [{ text: currentMessage }] }
-            ],
-            config: {
-                systemInstruction: systemInstruction
-            }
+        const chat = model.startChat({
+            history: historyForApi
         });
 
-        return response.text || "I'm sorry, I couldn't generate a response.";
+        const result = await chat.sendMessage(currentMessage);
+        return result.response.text();
     } catch (e) {
         console.error("Chat Error", e);
         return "I'm having trouble connecting right now. Please try again.";
     }
+};
+
+export const generateDailyInsight = async (
+  images: ImageCaptureSet,
+  checkin: DailyCheckinData,
+  userProfile?: QuestionnaireData
+): Promise<DailyInsightResponse> => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your .env file.");
+  }
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  const userPrompt = `
+    Perform a quick daily visual check-up based on the attached face images.
+    
+    User Context:
+    - Mood (1-4): ${checkin.mood}
+    - Sleep: ${checkin.sleep}
+    ${userProfile ? `- Known Profile: ${userProfile.age}yo ${userProfile.sex}, Goal: ${userProfile.activityLevel}` : ''}
+
+    Task:
+    1. Analyze the face for daily fluctuations (hydration, fatigue signs under eyes, skin pallor).
+    2. Combine visual signs with their reported sleep and mood.
+    3. Recommend 3 specific vitamins to target TODAY.
+    4. Recommend 3 "superfoods" to add to their diet TODAY to boost/stabilize energy.
+
+    Return JSON only:
+    {
+      "note": "A short, encouraging summary of what you see and how to tackle the day (max 2 sentences).",
+      "targetVitamins": [
+        { "name": "Vitamin C", "reason": "To combat the dullness seen in skin tone and boost immunity." },
+        ... 3 items
+      ],
+      "superfoods": [
+        { "name": "Chia Seeds", "benefit": "High in omega-3s to support brain function after low sleep." },
+        ... 3 items
+      ]
+    }
+  `;
+
+  const imageParts = [];
+  if (images.front) imageParts.push(extractImagePart(images.front));
+  if (images.left) imageParts.push(extractImagePart(images.left));
+  if (images.right) imageParts.push(extractImagePart(images.right));
+
+  try {
+    const result = await model.generateContent([
+      userPrompt,
+      ...imageParts
+    ]);
+
+    const response = result.response;
+    const text = response.text();
+    
+    if (!text) throw new Error("Empty response from AI");
+
+    return JSON.parse(text) as DailyInsightResponse;
+  } catch (error) {
+    console.error("Daily Insight Error:", error);
+    throw new Error("Failed to generate daily insights. Please try again.");
+  }
 };

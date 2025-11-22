@@ -10,11 +10,29 @@ export enum AppState {
   ERROR = 'ERROR'
 }
 
+export interface DailyCheckinData {
+  mood: number; // 1-4
+  sleep: string; // 4 options
+}
+
+export interface DailyInsightResponse {
+  note: string;
+  targetVitamins: {
+    name: string;
+    reason: string;
+  }[];
+  superfoods: {
+    name: string;
+    benefit: string;
+  }[];
+}
+
 export interface PastAssessment {
   id: string;
   date: string;
-  results: DietPlanResponse;
-  questionnaire: QuestionnaireData;
+  type: 'full' | 'daily';
+  results: DietPlanResponse | DailyInsightResponse;
+  questionnaire: QuestionnaireData | DailyCheckinData;
 }
 
 export interface User {
