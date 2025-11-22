@@ -131,6 +131,7 @@ const App: React.FC = () => {
   const handleViewAssessment = (assessment: PastAssessment) => {
     setResults(assessment.results);
     setQuestionnaire(assessment.questionnaire);
+    setScanMode(assessment.scanType || "face");
     setIsResultSaved(true);
     setAppState(AppState.RESULTS);
   };

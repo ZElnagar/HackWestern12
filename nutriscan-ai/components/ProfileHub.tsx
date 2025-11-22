@@ -154,19 +154,30 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800 mb-1">
-                            {new Date(assessment.date).toLocaleDateString(
-                              undefined,
-                              {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )}
-                          </p>
-                          <p className="text-sm text-slate-500">
-                            {assessment.results.summary.substring(0, 60)}...
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
+                                assessment.scanType === "hands"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-teal-100 text-teal-700"
+                              }`}
+                            >
+                              {assessment.scanType === "hands"
+                                ? "Hand Scan"
+                                : "Face Scan"}
+                            </span>
+                            <span className="font-bold text-slate-800">
+                              {new Date(assessment.date).toLocaleDateString(
+                                undefined,
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-500 line-clamp-1">
+                            {assessment.results.summary}
                           </p>
                         </div>
                       </div>
