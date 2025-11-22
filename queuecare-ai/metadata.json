@@ -1,7 +1,0 @@
-{
-  "name": "QueueCare AI",
-  "description": "A camera-based, AI-powered virtual ER check-in system that helps triage patients faster by analyzing visible symptoms and assigning priority.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}
