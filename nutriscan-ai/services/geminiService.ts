@@ -39,15 +39,23 @@ const extractImagePart = (dataUrl: string) => {
 
 export const generateDietPlan = async (
   images: ImageCaptureSet,
-  data: QuestionnaireData
+  data: QuestionnaireData,
+  scanMode: 'full' | 'face' | 'hands' = 'face'
 ): Promise<DietPlanResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // Enhanced Prompt for detailed multi-angle analysis with BUDGET constraints
-  const userPrompt = `
+  const visualAnalysisPrompt = scanMode === 'hands' ? `
+    I have attached images of the patient's hands (Fingernails, Palms, Skin Texture).
+    
+    PART 1: DEEP VISUAL SCAN & ANALYSIS (HANDS)
+    Analyze the hands for nutritional deficiencies:
+    - **Nails**: Look for Koilonychia (spoon nails - Iron deficiency), Leukonychia (white spots - Zinc deficiency), Beau's lines, longitudinal ridges (B-vitamins/Age), or brittleness (Biotin/Thyroid).
+    - **Skin**: Check for dryness/xerosis (Vitamin A/E/Omega-3), pallor (Anemia), or yellowing (Carotenemia/Jaundice).
+    - **Palms**: Check for Palmar Erythema (Liver/Hormonal) or pallor in creases (Anemia).
+  ` : `
     I have attached available images of the patient (Front is mandatory, Profile views are optional) for a comprehensive nutritional assessment.
     
-    PART 1: DEEP VISUAL SCAN & ANALYSIS
+    PART 1: DEEP VISUAL SCAN & ANALYSIS (FACE)
     Perform a highly detailed analysis of the provided images. You are looking for subtle and overt physiological markers of nutritional status.
     
     Please explicitly analyze and comment on:
@@ -68,6 +76,11 @@ export const generateDietPlan = async (
     - **Expression & Posture**: 
        - Signs of apathy, fatigue, or pain.
        - Head posture (slouching/drooping which may indicate muscle weakness or fatigue).
+  `;
+
+  // Enhanced Prompt for detailed multi-angle analysis with BUDGET constraints
+  const userPrompt = `
+    ${visualAnalysisPrompt}
     
     PART 2: CLINICAL SYNTHESIS & BUDGET PLANNING
     Combine your visual findings with the questionnaire data below.
