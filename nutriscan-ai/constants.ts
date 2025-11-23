@@ -19,9 +19,19 @@ export const RESPONSE_SCHEMA: Schema = {
             calories: { type: Type.NUMBER, description: "0-100 score for caloric balance" }
           },
           required: ["protein", "vitamins", "hydration", "calories"]
+        },
+        handBreakdown: {
+          type: Type.OBJECT,
+          properties: {
+            keratinStrength: { type: Type.NUMBER },
+            hydrationLevel: { type: Type.NUMBER },
+            vitaminIndicators: { type: Type.NUMBER },
+            circulation: { type: Type.NUMBER }
+          },
+          required: ["keratinStrength", "hydrationLevel", "vitaminIndicators", "circulation"]
         }
       },
-      required: ["total", "breakdown"]
+      required: ["total"]
     },
     interpretation: {
       type: Type.ARRAY,
@@ -42,7 +52,15 @@ export const RESPONSE_SCHEMA: Schema = {
         calories: { type: Type.NUMBER },
         protein_g: { type: Type.NUMBER },
         carbs_g: { type: Type.NUMBER },
-        fats_g: { type: Type.NUMBER }
+        fats_g: { type: Type.NUMBER },
+        iron_mg: { type: Type.NUMBER },
+        vitaminB12_ug: { type: Type.NUMBER },
+        vitaminD_IU: { type: Type.NUMBER },
+        folate_ug: { type: Type.NUMBER },
+        zinc_mg: { type: Type.NUMBER },
+        vitaminC_mg: { type: Type.NUMBER },
+        biotin_ug: { type: Type.NUMBER },
+        magnesium_mg: { type: Type.NUMBER }
       }
     },
     mealPlan: {

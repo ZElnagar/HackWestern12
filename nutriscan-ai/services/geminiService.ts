@@ -66,10 +66,12 @@ export const generateDietPlan = async (
     I have attached images of the patient's hands (Fingernails, Palms, Skin Texture).
     
     PART 1: DEEP VISUAL SCAN & ANALYSIS (HANDS)
-    Analyze the hands for nutritional deficiencies:
-    - **Nails**: Look for Koilonychia (spoon nails - Iron deficiency), Leukonychia (white spots - Zinc deficiency), Beau's lines, longitudinal ridges (B-vitamins/Age), or brittleness (Biotin/Thyroid).
-    - **Skin**: Check for dryness/xerosis (Vitamin A/E/Omega-3), pallor (Anemia), or yellowing (Carotenemia/Jaundice).
-    - **Palms**: Check for Palmar Erythema (Liver/Hormonal) or pallor in creases (Anemia).
+    Analyze the hands for nutritional deficiencies based on these 5 categories:
+    1. **Keratin Strength**: Measures nail hardness, resilience, cracking risk. Look for visible ridges, brittleness, smoothness.
+    2. **Hydration Level**: Fingernails show hydration through texture + flexibility. Look for dry/flaky patches, rough surface, white spots.
+    3. **Vitamin/Mineral Indicators**: Nails reveal nutritional deficiencies visually. Look for pale nails, spoon shape, white lines, color patterns. Key nutrients: Iron, B12, biotin, zinc.
+    4. **Nail Bed Circulation**: Assesses blood flow and oxygenation. Look for color (pink vs pale/blue), nail fold appearance, capillary visibility.
+    5. **Overall Nail Health Score**: A weighted average of all the above.
   ` : `
     I have attached available images of the patient (Front is mandatory, Profile views are optional) for a comprehensive nutritional assessment.
     
@@ -161,22 +163,30 @@ export const generateDietPlan = async (
        - If the finding is medical/severe, recommend a lab test or doctor visit.
        - Do NOT leave 'recommendedLabsOrReferral' empty or say "None indicated".
 
-    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data. Also provide breakdown scores (0-100) for:
+    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data.
+       ${scanMode === 'hands' ? `
+       **CRITICAL**: For Hand Scans, you MUST provide the 'handBreakdown' object in the 'nutritionScore' with these specific scores (0-100):
+       - **keratinStrength**: High score = strong, smooth nails. Low score = soft, peeling, cracked.
+       - **hydrationLevel**: High score = well-hydrated nail plate. Low score = dry, brittle nails.
+       - **vitaminIndicators**: High score = no visible deficiency signs. Low score = possible deficiencies.
+       - **circulation**: High = good circulation. Low = poor circulation signs.
+       ` : `
+       Also provide breakdown scores (0-100) for:
        - **Protein**: Based on muscle mass signs (temporal wasting) vs healthy structure.
        - **Vitamins**: Based on skin/eye health (pallor, dryness, etc).
        - **Hydration**: Based on skin turgor/dryness signs.
        - **Calories**: Based on weight/BMI and facial fat levels.
-       
-       **Scoring Guide:**
-       - 80-100 (Optimal): No visible deficits, healthy BMI, good skin tone.
-       - 60-79 (Needs Improvement): Minor signs (e.g. mild circles, slight dryness) or slightly suboptimal BMI.
-       - <60 (At Risk): Clear signs of deficiencies (pallor, wasting, cheilitis) or concerning BMI.
+       `}
 
     3. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
        ${scanMode === 'hands' ? `
-       - A nutrient-target summary. Focus on the specific micronutrients identified as deficient (e.g. Iron, Zinc, Biotin).
-       - **Shopping List**: Generate a list of **RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg") organized into a "Supplements" category.
-       - **Meal Plan**: Provide a simple "Supplement Schedule" (Morning/Noon/Night) in the meal plan structure. You can leave calories/macros as 0 or estimates.
+       - A nutrient-target summary. **CRITICAL: You MUST provide specific daily targets for nutrients relevant to nail/skin health: Iron, Vitamin D, Vitamin C, Vitamin B12, Zinc, Biotin, and Magnesium.**
+       - **Fill in the fields**: iron_mg, vitaminB12_ug, vitaminD_IU, folate_ug, zinc_mg, vitaminC_mg, biotin_ug, magnesium_mg.
+       - **Target Calculation**: Use standard RDAs for the patient's age/sex, but INCREASE the target if visual signs suggest deficiency (e.g., if spoon nails are seen, target higher Iron).
+       - **Shopping List**: Generate a list of **STRICTLY RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg", "Omega-3 Fish Oil"). 
+         - **CRITICAL**: Specify the **BIOAVAILABLE FORM** (e.g., "Magnesium Glycinate" not "Oxide") and **EXACT DOSAGE**.
+         - Do NOT include general food items in this list, ONLY supplements.
+       - **Meal Plan**: Provide a simple "Supplement & Nutrition Schedule" (Morning/Noon/Night) that incorporates these key nutrients.
        - **estimatedWeeklyCost**: Estimate the cost of these supplements.
        ` : `
        - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Carbs, Fats) based on the patient's age, sex, and biometrics. Do NOT return null.**

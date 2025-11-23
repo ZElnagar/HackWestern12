@@ -107,6 +107,24 @@ const NUTRIENT_DISPLAY_CONFIG: Record<
     colorClass: "bg-slate-100 border-slate-200 text-slate-700",
     step: 0.1,
   },
+  vitaminC_mg: {
+    label: "Vitamin C",
+    unit: "mg",
+    colorClass: "bg-orange-50 border-orange-100 text-orange-800",
+    step: 10,
+  },
+  biotin_ug: {
+    label: "Biotin",
+    unit: "µg",
+    colorClass: "bg-pink-50 border-pink-100 text-pink-800",
+    step: 10,
+  },
+  magnesium_mg: {
+    label: "Magnesium",
+    unit: "mg",
+    colorClass: "bg-indigo-50 border-indigo-100 text-indigo-800",
+    step: 10,
+  },
 };
 
 const formatText = (text: string) => {
@@ -271,7 +289,7 @@ const ResultsView: React.FC<Props> = ({
   // Export Functions
   const handleExportCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
-    
+
     // Helper to escape CSV values
     const escapeCSV = (value: string | number | null): string => {
       if (value === null || value === undefined) return "";
@@ -284,13 +302,15 @@ const ResultsView: React.FC<Props> = ({
     };
 
     // Header Section
-    csvContent += "===========================================================\n";
+    csvContent +=
+      "===========================================================\n";
     csvContent += "NUTRISCAN AI - COMPREHENSIVE NUTRITION PLAN\n";
-    csvContent += "===========================================================\n";
-    csvContent += `Generated: ${new Date().toLocaleDateString("en-US", { 
-      year: "numeric", 
-      month: "long", 
-      day: "numeric" 
+    csvContent +=
+      "===========================================================\n";
+    csvContent += `Generated: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })}\n`;
     if (data.nutritionScore) {
       csvContent += `Health Score: ${data.nutritionScore.total}/100\n`;
@@ -299,35 +319,51 @@ const ResultsView: React.FC<Props> = ({
     csvContent += "\n";
 
     // Nutrient Targets Section
-    csvContent += "-----------------------------------------------------------\n";
+    csvContent +=
+      "-----------------------------------------------------------\n";
     csvContent += "DAILY NUTRIENT TARGETS\n";
-    csvContent += "-----------------------------------------------------------\n";
+    csvContent +=
+      "-----------------------------------------------------------\n";
     csvContent += "Nutrient,Target,Unit\n";
 
     Object.entries(data.nutrientTargets).forEach(([key, value]) => {
       const config = NUTRIENT_DISPLAY_CONFIG[key];
       if (config) {
-        csvContent += `${escapeCSV(config.label)},${escapeCSV(value as number | null)},${escapeCSV(config.unit)}\n`;
+        csvContent += `${escapeCSV(config.label)},${escapeCSV(
+          value as number | null
+        )},${escapeCSV(config.unit)}\n`;
       }
     });
     csvContent += "\n";
 
     // Meal Plan Section
     if (data.mealPlan && data.mealPlan.length > 0) {
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "7-DAY MEAL PLAN\n";
-      csvContent += "-----------------------------------------------------------\n";
-      
+      csvContent +=
+        "-----------------------------------------------------------\n";
+
       data.mealPlan.forEach((day, dayIdx) => {
         csvContent += `\n${escapeCSV(day.day.toUpperCase())}\n`;
-        csvContent += `Daily Totals: ${day.estimatedNutrition.calories} kcal | Protein: ${day.estimatedNutrition.protein_g}g | Carbs: ${day.estimatedNutrition.carbs_g}g | Fats: ${day.estimatedNutrition.fats_g || day.estimatedNutrition.fat_g || 0}g\n`;
+        csvContent += `Daily Totals: ${
+          day.estimatedNutrition.calories
+        } kcal | Protein: ${day.estimatedNutrition.protein_g}g | Carbs: ${
+          day.estimatedNutrition.carbs_g
+        }g | Fats: ${
+          day.estimatedNutrition.fats_g || day.estimatedNutrition.fat_g || 0
+        }g\n`;
         csvContent += "Meal,Time,Description,Portions,Substitutions\n";
-        
+
         day.meals.forEach((meal, mealIdx) => {
           const mealLabel = getMealLabel(mealIdx);
-          csvContent += `${escapeCSV(mealLabel)},${escapeCSV(meal.time || "")},${escapeCSV(meal.description)},${escapeCSV(meal.portions)},${escapeCSV(meal.substitutions || "")}\n`;
+          csvContent += `${escapeCSV(mealLabel)},${escapeCSV(
+            meal.time || ""
+          )},${escapeCSV(meal.description)},${escapeCSV(
+            meal.portions
+          )},${escapeCSV(meal.substitutions || "")}\n`;
         });
-        
+
         if (dayIdx < data.mealPlan.length - 1) {
           csvContent += "\n";
         }
@@ -337,15 +373,19 @@ const ResultsView: React.FC<Props> = ({
 
     // Shopping List Section
     if (data.shoppingList && data.shoppingList.length > 0) {
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "SHOPPING LIST\n";
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "Category,Item\n";
-      
+
       data.shoppingList.forEach((category) => {
         if (category.items && category.items.length > 0) {
           category.items.forEach((item) => {
-            csvContent += `${escapeCSV(category.category)},${escapeCSV(item)}\n`;
+            csvContent += `${escapeCSV(category.category)},${escapeCSV(
+              item
+            )}\n`;
           });
         }
       });
@@ -353,10 +393,15 @@ const ResultsView: React.FC<Props> = ({
     }
 
     // Implementation Checklist
-    if (data.implementationChecklist && data.implementationChecklist.length > 0) {
-      csvContent += "-----------------------------------------------------------\n";
+    if (
+      data.implementationChecklist &&
+      data.implementationChecklist.length > 0
+    ) {
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "IMPLEMENTATION CHECKLIST\n";
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "Action Item\n";
       data.implementationChecklist.forEach((item) => {
         csvContent += `${escapeCSV(item)}\n`;
@@ -366,16 +411,21 @@ const ResultsView: React.FC<Props> = ({
 
     // Summary
     if (data.summary) {
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += "SUMMARY\n";
-      csvContent += "-----------------------------------------------------------\n";
+      csvContent +=
+        "-----------------------------------------------------------\n";
       csvContent += `${escapeCSV(data.summary)}\n`;
     }
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `nutriscan_plan_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `nutriscan_plan_${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -458,7 +508,9 @@ const ResultsView: React.FC<Props> = ({
   };
 
   // Safe check for nutritionScore existence in case of older cached data or partial API response
-  const hasScore = data.nutritionScore && data.nutritionScore.breakdown;
+  const hasScore =
+    data.nutritionScore &&
+    (data.nutritionScore.breakdown || data.nutritionScore.handBreakdown);
 
   return (
     <div className="w-full max-w-6xl mx-auto pb-20 relative">
@@ -482,7 +534,7 @@ const ResultsView: React.FC<Props> = ({
             <div className="flex flex-col items-center">
               <HealthRing
                 score={data.nutritionScore.total}
-                label="Overall Score"
+                label={scanMode === "hands" ? "Nail Health" : "Overall Score"}
                 size="large"
               />
               <div className="mt-4 text-center">
@@ -509,60 +561,91 @@ const ResultsView: React.FC<Props> = ({
 
             {/* Mini Rings Grid */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-              <HealthRing
-                score={data.nutritionScore.breakdown.protein}
-                label="Protein"
-                color="#3b82f6" // Blue
-              />
-              <HealthRing
-                score={data.nutritionScore.breakdown.vitamins}
-                label="Vitamins"
-                color="#8b5cf6" // Purple
-              />
-              <HealthRing
-                score={data.nutritionScore.breakdown.hydration}
-                label="Hydration"
-                color="#06b6d4" // Cyan
-              />
-              <HealthRing
-                score={data.nutritionScore.breakdown.calories}
-                label="Calories"
-                color="#f97316" // Orange
-              />
+              {scanMode === "hands" && data.nutritionScore.handBreakdown ? (
+                <>
+                  <HealthRing
+                    score={data.nutritionScore.handBreakdown.keratinStrength}
+                    label="Keratin"
+                    color="#ec4899" // Pink
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.handBreakdown.hydrationLevel}
+                    label="Hydration"
+                    color="#06b6d4" // Cyan
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.handBreakdown.vitaminIndicators}
+                    label="Vitamins"
+                    color="#8b5cf6" // Purple
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.handBreakdown.circulation}
+                    label="Circulation"
+                    color="#ef4444" // Red
+                  />
+                </>
+              ) : (
+                <>
+                  <HealthRing
+                    score={data.nutritionScore.breakdown?.protein || 0}
+                    label="Protein"
+                    color="#3b82f6" // Blue
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.breakdown?.vitamins || 0}
+                    label="Vitamins"
+                    color="#8b5cf6" // Purple
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.breakdown?.hydration || 0}
+                    label="Hydration"
+                    color="#06b6d4" // Cyan
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.breakdown?.calories || 0}
+                    label="Calories"
+                    color="#f97316" // Orange
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Header Summary */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-          <h2 className="text-3xl font-bold">Analysis Complete</h2>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
-              title="Export Macros CSV"
-            >
-              <FileText size={18} />
-              <span className="hidden sm:inline">CSV</span>
-            </button>
+      {/* Header Summary - Hidden for Hand Scan */}
+      {scanMode !== "hands" && (
+        <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+            <h2 className="text-3xl font-bold">Analysis Complete</h2>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
+                title="Export Macros CSV"
+              >
+                <FileText size={18} />
+                <span className="hidden sm:inline">CSV</span>
+              </button>
+            </div>
+          </div>
+          <p className="text-lg opacity-90 leading-relaxed">
+            {formatText(data.summary)}
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            {data.implementationChecklist.slice(0, 3).map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium border border-white/20"
+              >
+                <CheckCircle size={16} />
+                {formatText(item)}
+              </div>
+            ))}
           </div>
         </div>
-        <p className="text-lg opacity-90 leading-relaxed">{formatText(data.summary)}</p>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          {data.implementationChecklist.slice(0, 3).map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium border border-white/20"
-            >
-              <CheckCircle size={16} />
-              {formatText(item)}
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 mb-8 overflow-x-auto">
@@ -577,27 +660,29 @@ const ResultsView: React.FC<Props> = ({
           Clinical Findings
         </button>
         {scanMode !== "hands" && (
-          <button
-            onClick={() => setActiveTab("plan")}
-            className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
-              activeTab === "plan"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
-            }`}
-          >
-            Meal Plan & Macros
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab("plan")}
+              className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
+                activeTab === "plan"
+                  ? "text-teal-600 border-b-2 border-teal-600"
+                  : "text-slate-500 hover:text-teal-500"
+              }`}
+            >
+              Meal Plan & Macros
+            </button>
+            <button
+              onClick={() => setActiveTab("shopping")}
+              className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
+                activeTab === "shopping"
+                  ? "text-teal-600 border-b-2 border-teal-600"
+                  : "text-slate-500 hover:text-teal-500"
+              }`}
+            >
+              Shopping List
+            </button>
+          </>
         )}
-        <button
-          onClick={() => setActiveTab("shopping")}
-          className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
-            activeTab === "shopping"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
-          }`}
-        >
-          {scanMode === "hands" ? "Recommended Supplements" : "Shopping List"}
-        </button>
       </div>
 
       {/* Content */}
@@ -618,7 +703,9 @@ const ResultsView: React.FC<Props> = ({
                   }`}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-slate-800">{formatText(item.finding)}</h3>
+                    <h3 className="font-bold text-slate-800">
+                      {formatText(item.finding)}
+                    </h3>
                     <span
                       className={`text-xs font-bold px-2 py-1 rounded uppercase ${
                         item.confidence === "High"
@@ -687,7 +774,7 @@ const ResultsView: React.FC<Props> = ({
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {/* Main Macros (Always First) - Hidden for Hand Scan */}
-                {scanMode !== "hands" && (
+                {scanMode !== "hands" ? (
                   <>
                     {renderNutrientCard(
                       "calories",
@@ -699,19 +786,142 @@ const ResultsView: React.FC<Props> = ({
                       data.nutrientTargets.protein_g,
                       false
                     )}
-                     {renderNutrientCard(
+                    {renderNutrientCard(
                       "carbs_g",
                       data.nutrientTargets.carbs_g,
                       false
                     )}
-                     {renderNutrientCard(
+                    {renderNutrientCard(
                       "fats_g",
                       data.nutrientTargets.fats_g,
                       false
                     )}
                   </>
+                ) : (
+                  <>
+                    {/* Hand Scan Specific Micronutrients */}
+                    {renderNutrientCard(
+                      "iron_mg",
+                      data.nutrientTargets.iron_mg
+                    )}
+                    {renderNutrientCard(
+                      "vitaminC_mg",
+                      data.nutrientTargets.vitaminC_mg
+                    )}
+                    {renderNutrientCard(
+                      "vitaminD_IU",
+                      data.nutrientTargets.vitaminD_IU
+                    )}
+                    {renderNutrientCard(
+                      "vitaminB12_ug",
+                      data.nutrientTargets.vitaminB12_ug
+                    )}
+                    {renderNutrientCard(
+                      "zinc_mg",
+                      data.nutrientTargets.zinc_mg
+                    )}
+                    {renderNutrientCard(
+                      "folate_ug",
+                      data.nutrientTargets.folate_ug
+                    )}
+                  </>
                 )}
               </div>
+
+              {/* Recommended Supplements Section (Embedded for Hand Scan) */}
+              {scanMode === "hands" && data.shoppingList.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-slate-200">
+                  <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Pill size={20} className="text-teal-600" />
+                    Recommended Supplements & Sources
+                  </h4>
+
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Left Side: Supplement List */}
+                    <div className="flex-1 flex flex-col gap-4">
+                      {data.shoppingList.map((category, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full"
+                        >
+                          <h5 className="font-bold text-slate-800 mb-4 text-lg flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                              <Pill size={16} />
+                            </div>
+                            {category.category}
+                          </h5>
+                          <ul className="space-y-3">
+                            {category.items.map((item, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100"
+                              >
+                                <CheckCircle
+                                  size={18}
+                                  className="mt-0.5 text-teal-500 shrink-0"
+                                />
+                                <span className="font-medium">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Right Side: Store Links - Unified Card */}
+                    <div className="w-full lg:w-80">
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
+                        <h5 className="font-bold text-slate-800 mb-4 text-lg flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <ShoppingBag size={16} />
+                          </div>
+                          Buy Online
+                        </h5>
+
+                        <div className="flex flex-col gap-3 flex-1">
+                          <a
+                            href="https://www.supplementking.ca"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-4 p-4 border border-slate-100 rounded-xl hover:border-red-500 hover:bg-red-50 transition-all group bg-slate-50"
+                          >
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-600 font-bold text-xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+                              S
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-700 block">
+                                Supplement King
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                Best for Protein
+                              </span>
+                            </div>
+                          </a>
+
+                          <a
+                            href="https://ca.myprotein.com/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-4 p-4 border border-slate-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group bg-slate-50"
+                          >
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 font-bold text-xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+                              M
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-700 block">
+                                MyProtein
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                Direct to Consumer
+                              </span>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         )}
@@ -928,44 +1138,45 @@ const ResultsView: React.FC<Props> = ({
       </div>
 
       {/* Unsaved Changes Modal */}
-      {showUnsavedModal && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
-            <div className="flex items-center gap-3 mb-4 text-amber-600">
-              <AlertTriangle size={32} />
-              <h3 className="text-2xl font-bold text-slate-800">
-                Unsaved Assessment
-              </h3>
+      {showUnsavedModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
+              <div className="flex items-center gap-3 mb-4 text-amber-600">
+                <AlertTriangle size={32} />
+                <h3 className="text-2xl font-bold text-slate-800">
+                  Unsaved Assessment
+                </h3>
+              </div>
+              <p className="text-slate-600 mb-8">
+                You haven't saved your assessment results yet. Would you like to
+                save them to your profile before exiting?
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={handleSaveAndExit}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+                >
+                  <Save size={20} />
+                  Save & Exit
+                </button>
+                <button
+                  onClick={handleConfirmExit}
+                  className="w-full bg-white border-2 border-slate-200 hover:border-red-200 text-slate-700 hover:text-red-600 font-bold py-3 rounded-xl transition-colors"
+                >
+                  Exit Without Saving
+                </button>
+                <button
+                  onClick={() => setShowUnsavedModal(false)}
+                  className="w-full text-slate-400 hover:text-slate-600 font-medium py-2"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <p className="text-slate-600 mb-8">
-              You haven't saved your assessment results yet. Would you like to
-              save them to your profile before exiting?
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={handleSaveAndExit}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
-              >
-                <Save size={20} />
-                Save & Exit
-              </button>
-              <button
-                onClick={handleConfirmExit}
-                className="w-full bg-white border-2 border-slate-200 hover:border-red-200 text-slate-700 hover:text-red-600 font-bold py-3 rounded-xl transition-colors"
-              >
-                Exit Without Saving
-              </button>
-              <button
-                onClick={() => setShowUnsavedModal(false)}
-                className="w-full text-slate-400 hover:text-slate-600 font-medium py-2"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
