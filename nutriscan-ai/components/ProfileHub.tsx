@@ -1,5 +1,7 @@
-import React from 'react';
-import { User, PastAssessment } from '../types';
+import React, { useState } from "react";
+import { User, PastAssessment, QuestionnaireData } from "../types";
+import QuestionnaireForm from "./QuestionnaireForm";
+import { calculateNutrientTargets } from "../utils/nutrition";
 import {
   User as UserIcon,
   Calendar,
@@ -10,7 +12,10 @@ import {
   ScanFace,
   Hand,
   CheckCircle,
-  XCircle
+  XCircle,
+  Settings,
+  Save,
+  Lock,
 } from "lucide-react";
 
 interface ProfileHubProps {
@@ -20,16 +25,27 @@ interface ProfileHubProps {
   onBackToDashboard: () => void;
   isDailyDone: boolean;
   onStartDailyScan: () => void;
+  onUpdateUser: (user: User) => void;
+  onStartRescan: () => void;
 }
 
-const ProfileHub: React.FC<ProfileHubProps> = ({ 
-  user, 
-  onViewAssessment, 
-  onLogout, 
-  onBackToDashboard, 
-  isDailyDone, 
-  onStartDailyScan 
+const ProfileHub: React.FC<ProfileHubProps> = ({
+  user,
+  onViewAssessment,
+  onLogout,
+  onBackToDashboard,
+  isDailyDone,
+  onStartDailyScan,
+  onUpdateUser,
+  onStartRescan,
 }) => {
+  const [activeView, setActiveView] = useState<"overview" | "settings">(
+    "overview"
+  );
+  const [settingsTab, setSettingsTab] = useState<"profile" | "account">(
+    "profile"
+  );
+
   // Get last 7 days for calendar
   const getDaysArray = () => {
     const days = [];
@@ -44,17 +60,18 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
   const last7Days = getDaysArray();
 
   const isDayCompleted = (date: Date) => {
-    return user.history.some(a => 
-      a.type === 'daily' && 
-      new Date(a.date).toDateString() === date.toDateString()
+    return user.history.some(
+      (a) =>
+        a.type === "daily" &&
+        new Date(a.date).toDateString() === date.toDateString()
     );
   };
 
   const calculateStreak = () => {
     const dailyDates = new Set(
       user.history
-        .filter(a => a.type === 'daily')
-        .map(a => new Date(a.date).toDateString())
+        .filter((a) => a.type === "daily")
+        .map((a) => new Date(a.date).toDateString())
     );
 
     let streak = 0;
@@ -62,10 +79,10 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
 
     // If today is not done, check if yesterday was done to maintain streak
     if (!dailyDates.has(date.toDateString())) {
-       date.setDate(date.getDate() - 1);
-       if (!dailyDates.has(date.toDateString())) {
-         return 0;
-       }
+      date.setDate(date.getDate() - 1);
+      if (!dailyDates.has(date.toDateString())) {
+        return 0;
+      }
     }
 
     while (dailyDates.has(date.toDateString())) {
@@ -95,28 +112,59 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
             My Health Hub
           </h2>
           <p className="text-slate-500 mb-4">{user.email}</p>
-          <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-            <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="text-xs text-slate-400 uppercase font-bold block">
-                Member Since
-              </span>
-              <span className="text-slate-700 font-medium">
-                {new Date(user.joinedDate).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="text-xs text-slate-400 uppercase font-bold block">
-                Assessments
-              </span>
-              <span className="text-slate-700 font-medium">
-                {user.history.length}
-              </span>
-            </div>
-            <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="text-xs text-slate-400 uppercase font-bold block">Current Streak</span>
-              <span className="text-slate-700 font-medium">{calculateStreak()} Days</span>
-            </div>
+
+          <div className="flex items-center gap-2 mb-6 justify-center md:justify-start">
+            <button
+              onClick={() => setActiveView("overview")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                activeView === "overview"
+                  ? "bg-teal-600 text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveView("settings")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                activeView === "settings"
+                  ? "bg-teal-600 text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <Settings size={18} />
+              Settings
+            </button>
           </div>
+
+          {activeView === "overview" && (
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                <span className="text-xs text-slate-400 uppercase font-bold block">
+                  Member Since
+                </span>
+                <span className="text-slate-700 font-medium">
+                  {new Date(user.joinedDate).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                <span className="text-xs text-slate-400 uppercase font-bold block">
+                  Assessments
+                </span>
+                <span className="text-slate-700 font-medium">
+                  {user.history.length}
+                </span>
+              </div>
+              <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                <span className="text-xs text-slate-400 uppercase font-bold block">
+                  Current Streak
+                </span>
+                <span className="text-slate-700 font-medium">
+                  {calculateStreak()} Days
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <button
           onClick={onLogout}
@@ -127,172 +175,281 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
         </button>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Current Profile Summary */}
-        <div className="md:col-span-1 space-y-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Activity className="text-teal-600" />
-              Current Profile
-            </h3>
-            {user.currentProfile ? (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-slate-400">Physical Stats</p>
-                  <p className="text-slate-700 font-medium">
-                    {user.currentProfile.age} yrs • {user.currentProfile.sex}
-                  </p>
-                  <p className="text-slate-700">
-                    {user.currentProfile.heightCm}cm •{" "}
-                    {user.currentProfile.weightKg}kg
-                  </p>
+      {activeView === "overview" ? (
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Current Profile Summary */}
+          <div className="md:col-span-1 space-y-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Activity className="text-teal-600" />
+                Current Profile
+              </h3>
+              {user.currentProfile ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-slate-400">Physical Stats</p>
+                    <p className="text-slate-700 font-medium">
+                      {user.currentProfile.age} yrs • {user.currentProfile.sex}
+                    </p>
+                    <p className="text-slate-700">
+                      {user.currentProfile.height ||
+                        (user.currentProfile as any).heightCm}
+                      cm •{" "}
+                      {user.currentProfile.weight ||
+                        (user.currentProfile as any).weightKg}
+                      kg
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      Dietary Preferences
+                    </p>
+                    <p className="text-slate-700">
+                      {user.currentProfile.dietPreferences || "None"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Allergies</p>
+                    <p className="text-slate-700">
+                      {user.currentProfile.allergies || "None"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Goal</p>
+                    <p className="text-slate-700 capitalize">
+                      {user.currentProfile.activityLevel.replace("_", " ")}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-400">Dietary Preferences</p>
-                  <p className="text-slate-700">
-                    {user.currentProfile.dietPreferences || "None"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-400">Allergies</p>
-                  <p className="text-slate-700">
-                    {user.currentProfile.allergies || "None"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-400">Goal</p>
-                  <p className="text-slate-700 capitalize">
-                    {user.currentProfile.activityLevel.replace("_", " ")}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-slate-500 italic">
-                No profile data available yet.
-              </p>
-            )}
-          </div>
-
-          {/* Daily Streak Calendar */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-             <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Calendar className="text-orange-500" />
-              Daily Streak
-            </h3>
-            <div className="flex justify-between items-center">
-              {last7Days.map((date, idx) => {
-                const dailyAssessment = user.history.find(a => 
-                  a.type === 'daily' && 
-                  new Date(a.date).toDateString() === date.toDateString()
-                );
-                const completed = !!dailyAssessment;
-                const isToday = date.toDateString() === new Date().toDateString();
-                return (
-                  <button 
-                    key={idx} 
-                    onClick={() => dailyAssessment && onViewAssessment(dailyAssessment)}
-                    disabled={!dailyAssessment}
-                    className={`flex flex-col items-center gap-1 transition-transform ${dailyAssessment ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
-                      completed 
-                        ? 'bg-orange-100 border-orange-500 text-orange-700' 
-                        : isToday 
-                          ? 'bg-slate-100 border-slate-300 text-slate-400 border-dashed'
-                          : 'bg-slate-50 border-slate-100 text-slate-300'
-                    }`}>
-                      {completed ? <CheckCircle size={14} /> : date.getDate()}
-                    </div>
-                    <span className="text-[10px] text-slate-400 uppercase">
-                      {date.toLocaleDateString('en-US', { weekday: 'narrow' })}
-                    </span>
-                  </button>
-                );
-              })}
+              ) : (
+                <p className="text-slate-500 italic">
+                  No profile data available yet.
+                </p>
+              )}
             </div>
-            <div className="mt-4 text-center">
-               <p className="text-sm text-slate-500">
-                 {isDailyDone 
-                   ? "Great job! You've completed today's scan." 
-                   : "Don't forget your daily scan today!"}
-               </p>
-            </div>
-          </div>
-        </div>
 
-        {/* Assessment History */}
-        <div className="md:col-span-2">
-          <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
-            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <Calendar className="text-teal-600" />
-              Assessment History
-            </h3>
-            {user.history.filter(h => h.type === 'full').length > 0 ? (
-              <div className="space-y-4">
-                {user.history
-                  .filter(h => h.type === 'full')
-                  .slice()
-                  .reverse()
-                  .map((assessment) => (
+            {/* Daily Streak Calendar */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Calendar className="text-orange-500" />
+                Daily Streak
+              </h3>
+              <div className="flex justify-between items-center">
+                {last7Days.map((date, idx) => {
+                  const dailyAssessment = user.history.find(
+                    (a) =>
+                      a.type === "daily" &&
+                      new Date(a.date).toDateString() === date.toDateString()
+                  );
+                  const completed = !!dailyAssessment;
+                  const isToday =
+                    date.toDateString() === new Date().toDateString();
+                  return (
                     <button
-                      key={assessment.id}
-                      onClick={() => onViewAssessment(assessment)}
-                      className="w-full text-left bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 p-4 rounded-xl transition-all group flex items-center justify-between"
+                      key={idx}
+                      onClick={() =>
+                        dailyAssessment && onViewAssessment(dailyAssessment)
+                      }
+                      disabled={!dailyAssessment}
+                      className={`flex flex-col items-center gap-1 transition-transform ${
+                        dailyAssessment
+                          ? "hover:scale-110 cursor-pointer"
+                          : "cursor-default"
+                      }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`p-2 rounded-full ${
-                            assessment.scanType === "hands"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-teal-100 text-teal-600"
-                          }`}
-                        >
-                          {assessment.scanType === "hands" ? (
-                            <Hand size={20} />
-                          ) : (
-                            <ScanFace size={20} />
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
-                                assessment.scanType === "hands"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-teal-100 text-teal-700"
-                              }`}
-                            >
-                              {assessment.scanType === "hands"
-                                ? "Hand Scan"
-                                : "Face Scan"}
-                            </span>
-                            <span className="font-bold text-slate-800">
-                              {new Date(assessment.date).toLocaleDateString(
-                                undefined,
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
-                            </span>
-                          </div>
-                          <p className="text-sm text-slate-500 line-clamp-1">
-                            {(assessment.results as any).summary}
-                          </p>
-                        </div>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                          completed
+                            ? "bg-orange-100 border-orange-500 text-orange-700"
+                            : isToday
+                            ? "bg-slate-100 border-slate-300 text-slate-400 border-dashed"
+                            : "bg-slate-50 border-slate-100 text-slate-300"
+                        }`}
+                      >
+                        {completed ? <CheckCircle size={14} /> : date.getDate()}
                       </div>
-                      <ChevronRight className="text-slate-300 group-hover:text-teal-600 transition-colors" />
+                      <span className="text-[10px] text-slate-400 uppercase">
+                        {date.toLocaleDateString("en-US", {
+                          weekday: "narrow",
+                        })}
+                      </span>
                     </button>
-                  ))}
+                  );
+                })}
               </div>
-            ) : (
-              <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                <p className="text-slate-500">No full assessments completed yet.</p>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-slate-500">
+                  {isDailyDone
+                    ? "Great job! You've completed today's scan."
+                    : "Don't forget your daily scan today!"}
+                </p>
               </div>
-            )}
+            </div>
+          </div>
+
+          {/* Assessment History */}
+          <div className="md:col-span-2">
+            <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
+              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <Calendar className="text-teal-600" />
+                Assessment History
+              </h3>
+              {user.history.filter((h) => h.type === "full").length > 0 ? (
+                <div className="space-y-4">
+                  {user.history
+                    .filter((h) => h.type === "full")
+                    .slice()
+                    .reverse()
+                    .map((assessment) => (
+                      <button
+                        key={assessment.id}
+                        onClick={() => onViewAssessment(assessment)}
+                        className="w-full text-left bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 p-4 rounded-xl transition-all group flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`p-2 rounded-full ${
+                              assessment.scanType === "hands"
+                                ? "bg-blue-100 text-blue-600"
+                                : "bg-teal-100 text-teal-600"
+                            }`}
+                          >
+                            {assessment.scanType === "hands" ? (
+                              <Hand size={20} />
+                            ) : (
+                              <ScanFace size={20} />
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
+                                  assessment.scanType === "hands"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-teal-100 text-teal-700"
+                                }`}
+                              >
+                                {assessment.scanType === "hands"
+                                  ? "Hand Scan"
+                                  : "Face Scan"}
+                              </span>
+                              <span className="font-bold text-slate-800">
+                                {new Date(assessment.date).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-500 line-clamp-1">
+                              {(assessment.results as any).summary}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="text-slate-300 group-hover:text-teal-600 transition-colors" />
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                  <p className="text-slate-500">
+                    No full assessments completed yet.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-3xl mx-auto">
+          <div className="flex border-b border-slate-200 mb-8">
+            <button
+              onClick={() => setSettingsTab("profile")}
+              className={`px-6 py-3 font-medium text-sm sm:text-base ${
+                settingsTab === "profile"
+                  ? "text-teal-600 border-b-2 border-teal-600"
+                  : "text-slate-500 hover:text-teal-500"
+              }`}
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => setSettingsTab("account")}
+              className={`px-6 py-3 font-medium text-sm sm:text-base ${
+                settingsTab === "account"
+                  ? "text-teal-600 border-b-2 border-teal-600"
+                  : "text-slate-500 hover:text-teal-500"
+              }`}
+            >
+              Account Settings
+            </button>
+          </div>
+
+          {settingsTab === "profile" && (
+            <QuestionnaireForm
+              initialData={user.currentProfile}
+              onSubmit={(data) => {
+                // Update User with new profile
+                onUpdateUser({
+                  ...user,
+                  currentProfile: data,
+                });
+                // Trigger rescan immediately
+                onStartRescan();
+              }}
+            />
+          )}
+
+          {settingsTab === "account" && (
+            <div className="max-w-md mx-auto space-y-6 py-8">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    defaultValue={user.email}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500 cursor-not-allowed"
+                    disabled
+                  />
+                  <UserIcon
+                    size={18}
+                    className="absolute left-3 top-2.5 text-slate-400"
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Email cannot be changed.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                  <Lock
+                    size={18}
+                    className="absolute left-3 top-2.5 text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <button className="w-full bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition shadow-md flex items-center justify-center gap-2">
+                <Save size={20} />
+                Update Account
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Daily Reminder Banner */}
       {!isDailyDone && (
@@ -303,11 +460,15 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                 <Calendar size={24} />
               </div>
               <div>
-                <p className="font-bold text-lg">Have you done your daily face scan today?</p>
-                <p className="text-orange-100 text-sm">Keep your streak alive and track your daily progress.</p>
+                <p className="font-bold text-lg">
+                  Have you done your daily face scan today?
+                </p>
+                <p className="text-orange-100 text-sm">
+                  Keep your streak alive and track your daily progress.
+                </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={onStartDailyScan}
               className="bg-white text-orange-600 px-6 py-2 rounded-full font-bold hover:bg-orange-50 transition-colors shadow-md"
             >

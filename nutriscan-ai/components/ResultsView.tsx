@@ -17,6 +17,9 @@ import {
   Loader2,
   Edit2,
   X,
+  Download,
+  Share2,
+  Printer,
 } from "lucide-react";
 import {
   BarChart,
@@ -240,6 +243,47 @@ const ResultsView: React.FC<Props> = ({
     }));
   };
 
+  // Export Functions
+  const handleExportCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Nutrient,Target,Unit\n";
+
+    Object.entries(data.nutrientTargets).forEach(([key, value]) => {
+      const config = NUTRIENT_DISPLAY_CONFIG[key];
+      if (config) {
+        csvContent += `${config.label},${value},${config.unit}\n`;
+      }
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "nutriscan_macros.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "NutriScan AI Results",
+          text: `Check out my nutrition plan! Health Score: ${data.nutritionScore.total}/100`,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log("Error sharing", err);
+      }
+    } else {
+      alert("Sharing is not supported on this browser/device.");
+    }
+  };
+
   const renderNutrientCard = (
     key: string,
     value: number | null,
@@ -375,29 +419,55 @@ const ResultsView: React.FC<Props> = ({
 
       {/* Header Summary */}
       <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
           <h2 className="text-3xl font-bold">Analysis Complete</h2>
-          <button
-            onClick={() => onSave(data)}
-            disabled={isSaved}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-              isSaved
-                ? "bg-white/20 text-white/80 cursor-default"
-                : "bg-white text-teal-700 hover:bg-teal-50 shadow-lg"
-            }`}
-          >
-            {isSaved ? (
-              <>
-                <CheckCircle size={20} />
-                Saved to Profile
-              </>
-            ) : (
-              <>
-                <Save size={20} />
-                Save Result
-              </>
-            )}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
+              title="Export Macros CSV"
+            >
+              <FileText size={18} />
+              <span className="hidden sm:inline">CSV</span>
+            </button>
+            <button
+              onClick={handlePrintReport}
+              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
+              title="Print / Save PDF"
+            >
+              <Printer size={18} />
+              <span className="hidden sm:inline">Print PDF</span>
+            </button>
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
+              title="Share Results"
+            >
+              <Share2 size={18} />
+              <span className="hidden sm:inline">Share</span>
+            </button>
+            <button
+              onClick={() => onSave(data)}
+              disabled={isSaved}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                isSaved
+                  ? "bg-white/20 text-white/80 cursor-default"
+                  : "bg-white text-teal-700 hover:bg-teal-50 shadow-lg"
+              }`}
+            >
+              {isSaved ? (
+                <>
+                  <CheckCircle size={20} />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Save size={20} />
+                  Save
+                </>
+              )}
+            </button>
+          </div>
         </div>
         <p className="text-lg opacity-90 leading-relaxed">{data.summary}</p>
 
@@ -696,6 +766,45 @@ const ResultsView: React.FC<Props> = ({
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Grocery Store Integration */}
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <ShoppingBag size={20} className="text-teal-600" />
+                Shop Ingredients Online
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    W
+                  </div>
+                  <span className="font-bold text-slate-700">Walmart</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Find at nearest store
+                  </span>
+                </button>
+
+                <button className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    I
+                  </div>
+                  <span className="font-bold text-slate-700">Instacart</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Delivery available
+                  </span>
+                </button>
+
+                <button className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all group">
+                  <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    NF
+                  </div>
+                  <span className="font-bold text-slate-700">No Frills</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Price Match Guarantee
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         )}
