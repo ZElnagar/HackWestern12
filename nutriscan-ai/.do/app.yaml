@@ -1,0 +1,22 @@
+name: nutriscan-ai
+region: nyc
+services:
+  - name: web
+    github:
+      repo: YOUR_GITHUB_USERNAME/YOUR_REPO_NAME
+      branch: main
+      deploy_on_push: true
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    build_command: npm install && npm run build
+    http_port: 3000
+    routes:
+      - path: /
+    envs:
+      - key: GEMINI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: ${GEMINI_API_KEY}
+
