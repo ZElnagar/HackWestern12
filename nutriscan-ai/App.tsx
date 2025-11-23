@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppState,
   QuestionnaireData,
@@ -49,6 +49,15 @@ const App: React.FC = () => {
   );
   const [skipQuestionnaire, setSkipQuestionnaire] = useState(false);
   const [showProfileChoiceModal, setShowProfileChoiceModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  useEffect(() => {
+    // Load user from local storage
+    const storedUser = localStorage.getItem("nutriscan_current_user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const handleCameraComplete = (capturedImages: ImageCaptureSet) => {
     setImages(capturedImages);
@@ -75,7 +84,8 @@ const App: React.FC = () => {
 
   const performAnalysis = async (
     imgs: ImageCaptureSet | null,
-    data: QuestionnaireData
+    data: QuestionnaireData,
+    overrideUser?: User
   ) => {
     setAppState(AppState.ANALYZING);
     setError(null);
@@ -87,15 +97,34 @@ const App: React.FC = () => {
       setResults(plan);
       setIsResultSaved(false);
 
-      // Update current profile if user is logged in
-      if (user) {
-        setUser({
-          ...user,
-          currentProfile: data,
-        });
-      }
+      const currentUser = overrideUser || user;
 
-      setAppState(AppState.RESULTS);
+      // Update current profile if user is logged in
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          currentProfile: data,
+        };
+        setUser(updatedUser);
+        localStorage.setItem("nutriscan_current_user", JSON.stringify(updatedUser));
+        
+        // Update "database"
+        const storedUsers = localStorage.getItem("nutriscan_users");
+        if (storedUsers) {
+          const users: User[] = JSON.parse(storedUsers);
+          const index = users.findIndex(u => u.uid === updatedUser.uid);
+          if (index !== -1) {
+            users[index] = updatedUser;
+            localStorage.setItem("nutriscan_users", JSON.stringify(users));
+          }
+        }
+
+        setAppState(AppState.RESULTS);
+      } else {
+        // If not logged in, go to Auth to sign up
+        setAuthMode('signup');
+        setAppState(AppState.AUTH);
+      }
     } catch (err) {
       console.error(err);
       setError("An error occurred during analysis. Please try again.");
@@ -105,7 +134,8 @@ const App: React.FC = () => {
 
   const performDailyAnalysis = async (
     imgs: ImageCaptureSet | null,
-    checkin: DailyCheckinData
+    checkin: DailyCheckinData,
+    overrideUser?: User
   ) => {
     setAppState(AppState.ANALYZING);
     setError(null);
@@ -113,15 +143,17 @@ const App: React.FC = () => {
     try {
       if (!imgs) throw new Error("No images captured");
 
+      const currentUser = overrideUser || user;
+
       const insight = await generateDailyInsight(
         imgs,
         checkin,
-        user?.currentProfile
+        currentUser?.currentProfile
       );
       setDailyResults(insight);
 
       // Auto-save logic
-      if (user) {
+      if (currentUser) {
         const newAssessment: PastAssessment = {
           id: Date.now().toString(),
           date: new Date().toISOString(),
@@ -130,10 +162,25 @@ const App: React.FC = () => {
           questionnaire: checkin,
         };
 
-        setUser({
-          ...user,
-          history: [...user.history, newAssessment],
-        });
+        const updatedUser = {
+          ...currentUser,
+          history: [...currentUser.history, newAssessment],
+        };
+
+        setUser(updatedUser);
+        localStorage.setItem("nutriscan_current_user", JSON.stringify(updatedUser));
+
+        // Update "database"
+        const storedUsers = localStorage.getItem("nutriscan_users");
+        if (storedUsers) {
+          const users: User[] = JSON.parse(storedUsers);
+          const index = users.findIndex(u => u.uid === updatedUser.uid);
+          if (index !== -1) {
+            users[index] = updatedUser;
+            localStorage.setItem("nutriscan_users", JSON.stringify(users));
+          }
+        }
+
         setIsResultSaved(true);
         setShowSaveNotification(true);
         setTimeout(() => setShowSaveNotification(false), 3000);
@@ -152,43 +199,125 @@ const App: React.FC = () => {
     if (user) {
       performAnalysis(images, data);
     } else {
+      setAuthMode('signup');
       setAppState(AppState.AUTH);
     }
   };
 
   const handleDailyCheckinSubmit = (data: DailyCheckinData) => {
     setDailyCheckin(data);
-    performDailyAnalysis(images, data);
+    if (user) {
+      performDailyAnalysis(images, data);
+    } else {
+      setAuthMode('signup');
+      setAppState(AppState.AUTH);
+    }
   };
 
-  const handleAuthComplete = (userData: User) => {
-    // Merge questionnaire data into user profile if available from the flow
-    const updatedUser = { ...userData };
-    if (questionnaire) {
-      updatedUser.currentProfile = questionnaire;
+  const handleAuthComplete = async (userData: User) => {
+    // Save user first
+    localStorage.setItem("nutriscan_current_user", JSON.stringify(userData));
+    
+    // Also update the user in the "database"
+    const storedUsers = localStorage.getItem("nutriscan_users");
+    if (storedUsers) {
+      const users: User[] = JSON.parse(storedUsers);
+      const index = users.findIndex(u => u.uid === userData.uid);
+      if (index !== -1) {
+        users[index] = userData;
+        localStorage.setItem("nutriscan_users", JSON.stringify(users));
+      }
     }
-    setUser(updatedUser);
+    
+    setUser(userData);
 
-    if (images && questionnaire) {
-      performAnalysis(images, questionnaire);
+    // Check for Pre-Analysis Signup (New Flow)
+    if (images && questionnaire && !results && assessmentType === 'full') {
+      performAnalysis(images, questionnaire, userData);
+      return;
+    }
+    
+    if (images && dailyCheckin && !dailyResults && assessmentType === 'daily') {
+      performDailyAnalysis(images, dailyCheckin, userData);
+      return;
+    }
+
+    // If we have pending assessment data (meaning we just signed up to save it - Old Flow/Fallback)
+    if ((results && questionnaire) || (dailyResults && dailyCheckin)) {
+      let newAssessment: PastAssessment;
+
+      if (assessmentType === "full" && results && questionnaire) {
+        newAssessment = {
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          type: "full",
+          results: results,
+          questionnaire: questionnaire,
+          scanType: scanMode,
+        };
+      } else if (assessmentType === "daily" && dailyResults && dailyCheckin) {
+        newAssessment = {
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          type: "daily",
+          results: dailyResults,
+          questionnaire: dailyCheckin,
+        };
+      } else {
+        // Should not happen based on check above
+        setAppState(AppState.DASHBOARD);
+        return;
+      }
+
+      const updatedUser: User = {
+        ...userData,
+        currentProfile: questionnaire || userData.currentProfile,
+        history: [...userData.history, newAssessment]
+      };
+
+      // Save to local storage
+      localStorage.setItem("nutriscan_current_user", JSON.stringify(updatedUser));
+      
+      // Also update the user in the "database"
+      const storedUsers2 = localStorage.getItem("nutriscan_users");
+      if (storedUsers2) {
+        const users: User[] = JSON.parse(storedUsers2);
+        const index = users.findIndex(u => u.uid === updatedUser.uid);
+        if (index !== -1) {
+          users[index] = updatedUser;
+          localStorage.setItem("nutriscan_users", JSON.stringify(users));
+        }
+      }
+
+      setUser(updatedUser);
+      setIsResultSaved(true);
+      setAppState(AppState.RESULTS); // Show results immediately after signup
     } else {
-      // If just logging in without a flow, go to dashboard
+      // Just logging in
       setAppState(AppState.DASHBOARD);
     }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("nutriscan_current_user");
     setUser(null);
     setAppState(AppState.LANDING);
     setImages(null);
     setQuestionnaire(null);
     setResults(null);
     setDailyResults(null);
-    setIsResultSaved(false);
+    setDailyCheckin(null);
   };
 
-  const handleSaveAssessment = (updatedResults?: DietPlanResponse) => {
-    if (user && !isResultSaved) {
+  const handleSaveAssessment = async (updatedResults?: DietPlanResponse) => {
+    if (!user) {
+      // If not logged in, go to Auth screen (Signup mode)
+      setAuthMode('signup');
+      setAppState(AppState.AUTH);
+      return;
+    }
+
+    if (!isResultSaved) {
       let newAssessment: PastAssessment;
 
       if (
@@ -216,10 +345,34 @@ const App: React.FC = () => {
         return;
       }
 
-      setUser({
+      // Calculate new streak
+      let newStreak = user.streak || 0;
+      if (assessmentType === "daily") {
+        newStreak += 1;
+      }
+
+      const updatedUser = {
         ...user,
         history: [...user.history, newAssessment],
-      });
+        currentProfile: questionnaire || user.currentProfile,
+        streak: newStreak
+      };
+
+      // Save to local storage
+      localStorage.setItem("nutriscan_current_user", JSON.stringify(updatedUser));
+      
+      // Update "database"
+      const storedUsers = localStorage.getItem("nutriscan_users");
+      if (storedUsers) {
+        const users: User[] = JSON.parse(storedUsers);
+        const index = users.findIndex(u => u.uid === user.uid);
+        if (index !== -1) {
+          users[index] = updatedUser;
+          localStorage.setItem("nutriscan_users", JSON.stringify(users));
+        }
+      }
+
+      setUser(updatedUser);
       setIsResultSaved(true);
       setShowSaveNotification(true);
 
@@ -297,13 +450,26 @@ const App: React.FC = () => {
               >
                 Start Assessment
               </button>
-              <button
-                onClick={() => setAppState(AppState.AUTH)}
-                className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
-              >
-                <LogIn size={24} />
-                Log In
-              </button>
+              {user ? (
+                <button
+                  onClick={() => setAppState(AppState.DASHBOARD)}
+                  className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                >
+                  <ScanFace size={24} />
+                  Dashboard
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAppState(AppState.AUTH);
+                  }}
+                  className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                >
+                  <LogIn size={24} />
+                  Log In
+                </button>
+              )}
             </div>
             <p className="mt-2 text-sm text-slate-400">
               Requires camera access • Privacy focused (images processed for
@@ -329,7 +495,8 @@ const App: React.FC = () => {
         return (
           <AuthScreen
             onComplete={handleAuthComplete}
-            defaultMode={!images && !questionnaire ? "login" : "signup"}
+            defaultMode={authMode}
+            onBack={() => setAppState(AppState.LANDING)}
           />
         );
 
@@ -358,7 +525,21 @@ const App: React.FC = () => {
             onBackToDashboard={() => setAppState(AppState.DASHBOARD)}
             isDailyDone={isDailyDoneToday()}
             onStartDailyScan={startDailyScan}
-            onUpdateUser={(updatedUser) => setUser(updatedUser)}
+            onUpdateUser={(updatedUser) => {
+              setUser(updatedUser);
+              localStorage.setItem("nutriscan_current_user", JSON.stringify(updatedUser));
+              
+              // Update "database"
+              const storedUsers = localStorage.getItem("nutriscan_users");
+              if (storedUsers) {
+                const users: User[] = JSON.parse(storedUsers);
+                const index = users.findIndex(u => u.uid === updatedUser.uid);
+                if (index !== -1) {
+                  users[index] = updatedUser;
+                  localStorage.setItem("nutriscan_users", JSON.stringify(users));
+                }
+              }
+            }}
             onStartRescan={() => {
               // Reset all assessment state to simulate a fresh start
               setImages(null);

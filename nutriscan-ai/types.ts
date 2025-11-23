@@ -39,11 +39,13 @@ export interface PastAssessment {
 }
 
 export interface User {
+  uid: string;
   email: string;
-  password?: string; // In a real app, don't store this in plain text/state like this
+  password?: string;
   joinedDate: string;
   currentProfile?: QuestionnaireData;
   history: PastAssessment[];
+  streak?: number;
 }
 
 export interface WearableData {
