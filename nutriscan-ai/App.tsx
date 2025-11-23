@@ -358,6 +358,21 @@ const App: React.FC = () => {
             onBackToDashboard={() => setAppState(AppState.DASHBOARD)}
             isDailyDone={isDailyDoneToday()}
             onStartDailyScan={startDailyScan}
+            onUpdateUser={(updatedUser) => setUser(updatedUser)}
+            onStartRescan={() => {
+              // Reset all assessment state to simulate a fresh start
+              setImages(null);
+              setResults(null);
+              setDailyResults(null);
+              setDailyCheckin(null);
+              setIsResultSaved(false);
+
+              // Configure for a fresh face scan using the updated profile
+              setScanMode("face");
+              setAssessmentType("full");
+              setSkipQuestionnaire(true); // Skip questionnaire since we just updated it in settings
+              setAppState(AppState.CAMERA);
+            }}
           />
         ) : null;
 

@@ -18,6 +18,9 @@ import {
   Loader2,
   Edit2,
   X,
+  Download,
+  Share2,
+  Printer,
 } from "lucide-react";
 import {
   BarChart,
@@ -265,6 +268,139 @@ const ResultsView: React.FC<Props> = ({
     }));
   };
 
+  // Export Functions
+  const handleExportCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Helper to escape CSV values
+    const escapeCSV = (value: string | number | null): string => {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      // If contains comma, newline, or quote, wrap in quotes and escape quotes
+      if (str.includes(",") || str.includes("\n") || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Header Section
+    csvContent += "===========================================================\n";
+    csvContent += "NUTRISCAN AI - COMPREHENSIVE NUTRITION PLAN\n";
+    csvContent += "===========================================================\n";
+    csvContent += `Generated: ${new Date().toLocaleDateString("en-US", { 
+      year: "numeric", 
+      month: "long", 
+      day: "numeric" 
+    })}\n`;
+    if (data.nutritionScore) {
+      csvContent += `Health Score: ${data.nutritionScore.total}/100\n`;
+    }
+    csvContent += `Estimated Weekly Cost: $${data.estimatedWeeklyCost} CAD\n`;
+    csvContent += "\n";
+
+    // Nutrient Targets Section
+    csvContent += "-----------------------------------------------------------\n";
+    csvContent += "DAILY NUTRIENT TARGETS\n";
+    csvContent += "-----------------------------------------------------------\n";
+    csvContent += "Nutrient,Target,Unit\n";
+
+    Object.entries(data.nutrientTargets).forEach(([key, value]) => {
+      const config = NUTRIENT_DISPLAY_CONFIG[key];
+      if (config) {
+        csvContent += `${escapeCSV(config.label)},${escapeCSV(value as number | null)},${escapeCSV(config.unit)}\n`;
+      }
+    });
+    csvContent += "\n";
+
+    // Meal Plan Section
+    if (data.mealPlan && data.mealPlan.length > 0) {
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "7-DAY MEAL PLAN\n";
+      csvContent += "-----------------------------------------------------------\n";
+      
+      data.mealPlan.forEach((day, dayIdx) => {
+        csvContent += `\n${escapeCSV(day.day.toUpperCase())}\n`;
+        csvContent += `Daily Totals: ${day.estimatedNutrition.calories} kcal | Protein: ${day.estimatedNutrition.protein_g}g | Carbs: ${day.estimatedNutrition.carbs_g}g | Fats: ${day.estimatedNutrition.fats_g || day.estimatedNutrition.fat_g || 0}g\n`;
+        csvContent += "Meal,Time,Description,Portions,Substitutions\n";
+        
+        day.meals.forEach((meal, mealIdx) => {
+          const mealLabel = getMealLabel(mealIdx);
+          csvContent += `${escapeCSV(mealLabel)},${escapeCSV(meal.time || "")},${escapeCSV(meal.description)},${escapeCSV(meal.portions)},${escapeCSV(meal.substitutions || "")}\n`;
+        });
+        
+        if (dayIdx < data.mealPlan.length - 1) {
+          csvContent += "\n";
+        }
+      });
+      csvContent += "\n";
+    }
+
+    // Shopping List Section
+    if (data.shoppingList && data.shoppingList.length > 0) {
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "SHOPPING LIST\n";
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "Category,Item\n";
+      
+      data.shoppingList.forEach((category) => {
+        if (category.items && category.items.length > 0) {
+          category.items.forEach((item) => {
+            csvContent += `${escapeCSV(category.category)},${escapeCSV(item)}\n`;
+          });
+        }
+      });
+      csvContent += "\n";
+    }
+
+    // Implementation Checklist
+    if (data.implementationChecklist && data.implementationChecklist.length > 0) {
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "IMPLEMENTATION CHECKLIST\n";
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "Action Item\n";
+      data.implementationChecklist.forEach((item) => {
+        csvContent += `${escapeCSV(item)}\n`;
+      });
+      csvContent += "\n";
+    }
+
+    // Summary
+    if (data.summary) {
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += "SUMMARY\n";
+      csvContent += "-----------------------------------------------------------\n";
+      csvContent += `${escapeCSV(data.summary)}\n`;
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `nutriscan_plan_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "NutriScan AI Results",
+          text: `Check out my nutrition plan! Health Score: ${data.nutritionScore.total}/100`,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log("Error sharing", err);
+      }
+    } else {
+      alert("Sharing is not supported on this browser/device.");
+    }
+  };
+
   const renderNutrientCard = (
     key: string,
     value: number | null,
@@ -400,9 +536,18 @@ const ResultsView: React.FC<Props> = ({
 
       {/* Header Summary */}
       <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
           <h2 className="text-3xl font-bold">Analysis Complete</h2>
-          {/* Removed Save Result button as per request */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all border border-white/20"
+              title="Export Macros CSV"
+            >
+              <FileText size={18} />
+              <span className="hidden sm:inline">CSV</span>
+            </button>
+          </div>
         </div>
         <p className="text-lg opacity-90 leading-relaxed">{formatText(data.summary)}</p>
 
@@ -704,6 +849,60 @@ const ResultsView: React.FC<Props> = ({
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Grocery Store Integration */}
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <ShoppingBag size={20} className="text-teal-600" />
+                Shop Ingredients Online
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <a
+                  href="https://www.walmart.ca"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    W
+                  </div>
+                  <span className="font-bold text-slate-700">Walmart</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Find at nearest store
+                  </span>
+                </a>
+
+                <a
+                  href="https://www.instacart.ca"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    I
+                  </div>
+                  <span className="font-bold text-slate-700">Instacart</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Delivery available
+                  </span>
+                </a>
+
+                <a
+                  href="https://www.loblaws.ca"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
+                    L
+                  </div>
+                  <span className="font-bold text-slate-700">Loblaws</span>
+                  <span className="text-xs text-slate-500 mt-1">
+                    Price Match Guarantee
+                  </span>
+                </a>
+              </div>
             </div>
           </div>
         )}
