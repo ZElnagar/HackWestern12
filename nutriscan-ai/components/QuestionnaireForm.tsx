@@ -7,6 +7,7 @@ import {
   Watch,
   CheckCircle,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { connectToWearable } from "../services/wearableService";
 
@@ -161,6 +162,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
     // Final consistency check before submit
     let finalData = { ...formData };
 
+    // Age Check
+    if (Number(finalData.age) < 18) {
+      alert("You must be at least 18 years old to use NutriScan.");
+      return;
+    }
+
     // Ensure numeric values are clean numbers
     finalData.age = Number(finalData.age);
     finalData.weeklyBudget = Number(finalData.weeklyBudget);
@@ -257,6 +264,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 }`}
                 required
               />
+              {Number(formData.age) < 18 && formData.age !== "" && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1 font-medium">
+                  <AlertTriangle size={12} />
+                  Must be 18 or older.
+                </p>
+              )}
               {!!initialData && (
                 <p className="text-xs text-slate-400 mt-1">
                   Cannot be changed in settings.

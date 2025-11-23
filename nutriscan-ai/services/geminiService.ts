@@ -66,10 +66,12 @@ export const generateDietPlan = async (
     I have attached images of the patient's hands (Fingernails, Palms, Skin Texture).
     
     PART 1: DEEP VISUAL SCAN & ANALYSIS (HANDS)
-    Analyze the hands for nutritional deficiencies:
-    - **Nails**: Look for Koilonychia (spoon nails - Iron deficiency), Leukonychia (white spots - Zinc deficiency), Beau's lines, longitudinal ridges (B-vitamins/Age), or brittleness (Biotin/Thyroid).
-    - **Skin**: Check for dryness/xerosis (Vitamin A/E/Omega-3), pallor (Anemia), or yellowing (Carotenemia/Jaundice).
-    - **Palms**: Check for Palmar Erythema (Liver/Hormonal) or pallor in creases (Anemia).
+    Analyze the hands for nutritional deficiencies based on these 5 categories:
+    1. **Keratin Strength**: Measures nail hardness, resilience, cracking risk. Look for visible ridges, brittleness, smoothness.
+    2. **Hydration Level**: Fingernails show hydration through texture + flexibility. Look for dry/flaky patches, rough surface, white spots.
+    3. **Vitamin/Mineral Indicators**: Nails reveal nutritional deficiencies visually. Look for pale nails, spoon shape, white lines, color patterns. Key nutrients: Iron, B12, biotin, zinc.
+    4. **Nail Bed Circulation**: Assesses blood flow and oxygenation. Look for color (pink vs pale/blue), nail fold appearance, capillary visibility.
+    5. **Overall Nail Health Score**: A weighted average of all the above.
   ` : `
     I have attached available images of the patient (Front is mandatory, Profile views are optional) for a comprehensive nutritional assessment.
     
@@ -141,9 +143,9 @@ export const generateDietPlan = async (
       - **Protein**:
         - For Men: 0.8g per pound of body weight (approx 1.76g per kg).
         - For Women: 0.65g per pound of body weight (approx 1.4g per kg).
-        - Calculation: (Weight in kg * 1.76) = grams of protein.
+        - Calculation: (Weight in kg * 1.76) + 15 = grams of protein.
       - **Fats**: 30% of Total Calories. ((Total Calories * 0.30) / 9) = grams of fat.
-      - **Carbohydrates**: Remaining calories. ((Total Calories - (Protein_g * 4) - (Fat_g * 9)) / 4) = grams of carbs.
+      - **Carbohydrates**: Remaining calories. ((Total Calories - (Protein_g * 4) - (Fat_g * 9)) / 4) - 40 = grams of carbs.
     - Return these calculated gram values in the 'nutrientTargets' object.
 
     **BUDGET CONSTRAINT (CRITICAL)**:
@@ -155,28 +157,36 @@ export const generateDietPlan = async (
     - **The Meal Plan MUST be realistic for this budget.**
 
     Task:
-    1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
+    1. **Interpretation**: Identify **at least 2 and up to 3** key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
        - **CRITICAL**: For EACH finding, provide a specific, actionable recommendation in the 'recommendedLabsOrReferral' field. 
        - If the finding is minor (e.g., dry lips), recommend a lifestyle change (e.g., "Increase water intake to 2.5L/day").
        - If the finding is medical/severe, recommend a lab test or doctor visit.
        - Do NOT leave 'recommendedLabsOrReferral' empty or say "None indicated".
 
-    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data. Also provide breakdown scores (0-100) for:
-       - **Protein**: Based on muscle mass signs (temporal wasting) vs healthy structure.
-       - **Vitamins**: Based on skin/eye health (pallor, dryness, etc).
-       - **Hydration**: Based on skin turgor/dryness signs.
-       - **Calories**: Based on weight/BMI and facial fat levels.
-       
-       **Scoring Guide:**
-       - 80-100 (Optimal): No visible deficits, healthy BMI, good skin tone.
-       - 60-79 (Needs Improvement): Minor signs (e.g. mild circles, slight dryness) or slightly suboptimal BMI.
-       - <60 (At Risk): Clear signs of deficiencies (pallor, wasting, cheilitis) or concerning BMI.
+    2. **Nutrition Score**: Assign a score out of 100 for overall health based on visual signs and questionnaire data.
+       ${scanMode === 'hands' ? `
+       **CRITICAL**: For Hand Scans, you MUST provide the 'handBreakdown' object in the 'nutritionScore' with these specific scores (0-100):
+       - **keratinStrength**: High score = strong, smooth nails. Low score = soft, peeling, cracked.
+       - **hydrationLevel**: High score = well-hydrated nail plate. Low score = dry, brittle nails.
+       - **vitaminIndicators**: High score = no visible deficiency signs. Low score = possible deficiencies.
+       - **circulation**: High = good circulation. Low = poor circulation signs.
+       ` : `
+       Also provide breakdown scores (0-100) for:
+       - **Skin**: Based on texture, clarity, pallor, and acne signs.
+       - **BMI**: Based on weight management status (healthy range = high score).
+       - **Sleep**: Based on dark circles, eye puffiness, and wearable data if available.
+       - **Hydration**: Based on skin turgor, lip dryness, and texture.
+       `}
 
     3. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
        ${scanMode === 'hands' ? `
-       - A nutrient-target summary. Focus on the specific micronutrients identified as deficient (e.g. Iron, Zinc, Biotin).
-       - **Shopping List**: Generate a list of **RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg") organized into a "Supplements" category.
-       - **Meal Plan**: Provide a simple "Supplement Schedule" (Morning/Noon/Night) in the meal plan structure. You can leave calories/macros as 0 or estimates.
+       - A nutrient-target summary. **CRITICAL: You MUST provide specific daily targets for nutrients relevant to nail/skin health: Iron, Vitamin D, Vitamin C, Vitamin B12, Zinc, Biotin, and Magnesium.**
+       - **Fill in the fields**: iron_mg, vitaminB12_ug, vitaminD_IU, folate_ug, zinc_mg, vitaminC_mg, biotin_ug, magnesium_mg.
+       - **Target Calculation**: Use standard RDAs for the patient's age/sex, but INCREASE the target if visual signs suggest deficiency (e.g., if spoon nails are seen, target higher Iron).
+       - **Shopping List**: Generate a list of **STRICTLY RECOMMENDED SUPPLEMENTS** (e.g., "Zinc Picolinate 30mg", "Biotin 5000mcg", "Omega-3 Fish Oil"). 
+         - **CRITICAL**: Specify the **BIOAVAILABLE FORM** (e.g., "Magnesium Glycinate" not "Oxide") and **EXACT DOSAGE**.
+         - Do NOT include general food items in this list, ONLY supplements.
+       - **Meal Plan**: Provide a simple "Supplement & Nutrition Schedule" (Morning/Noon/Night) that incorporates these key nutrients.
        - **estimatedWeeklyCost**: Estimate the cost of these supplements.
        ` : `
        - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Carbs, Fats) based on the patient's age, sex, and biometrics. Do NOT return null.**
@@ -228,7 +238,7 @@ export const generateDietPlan = async (
 export const sendChatMessage = async (
     history: ChatMessage[], 
     currentMessage: string,
-    contextData: { questionnaire: QuestionnaireData, results: DietPlanResponse }
+    contextData: { questionnaire: QuestionnaireData | null, results: DietPlanResponse | null }
 ): Promise<string> => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
     if (!apiKey) {
@@ -237,17 +247,25 @@ export const sendChatMessage = async (
     const genAI = new GoogleGenerativeAI(apiKey);
     
     const systemInstruction = `
-        You are the NutriScan AI Assistant. You have just completed a visual health analysis and diet plan generation for a user.
+        You are the NutriScan AI Assistant.
         
+        ${contextData.results ? `
+        You have just completed a visual health analysis and diet plan generation for a user.
         Here is the User's Context:
         - Questionnaire: ${JSON.stringify(contextData.questionnaire)}
         - Analysis & Diet Plan Results: ${JSON.stringify(contextData.results)}
         - **Location Context**: Ontario, Canada.
-        - **Budget**: $${contextData.questionnaire.weeklyBudget} CAD / week.
+        - **Budget**: $${contextData.questionnaire?.weeklyBudget || 'N/A'} CAD / week.
         
         Your Goal:
         Answer the user's follow-up questions regarding their results, the specific food recommendations, or general nutrition.
-        - Explain *why* specific foods were recommended based on their scan (e.g., "I recommended spinach because the scan showed pallor indicating potential low iron").
+        - Explain *why* specific foods were recommended based on their scan.
+        ` : `
+        You are a helpful nutrition assistant. The user has not completed an analysis yet, or is navigating the app.
+        Answer general questions about nutrition, health, and diet.
+        Encourage them to complete a scan for personalized advice.
+        `}
+        
         - If they ask about prices, quote estimates based on Ontario, Canada grocery prices.
         - Be encouraging, evidence-based, and concise.
         - If they ask about medical diagnoses, remind them you are an AI assistant and they should see a doctor.
@@ -259,7 +277,21 @@ export const sendChatMessage = async (
     });
 
     // Reconstruct history for the API
-    const historyForApi = history.map(h => ({
+    // Gemini API requires history to start with a 'user' role.
+    // We filter out any initial model messages (like the greeting).
+    let apiHistory = history.filter((h, index) => {
+      if (index === 0 && h.role === 'model') return false;
+      return true;
+    });
+
+    // Ensure alternation (User -> Model -> User -> Model) if needed, 
+    // but usually just ensuring it starts with User is enough for the SDK to handle or throw specific error.
+    // Simple sanitization: if still starts with model (e.g. user deleted messages), remove it.
+    if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
+        apiHistory.shift();
+    }
+
+    const historyForApi = apiHistory.map(h => ({
         role: h.role,
         parts: [{ text: h.text }]
     }));

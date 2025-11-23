@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { User, PastAssessment, QuestionnaireData } from "../types";
 import QuestionnaireForm from "./QuestionnaireForm";
 import { calculateNutrientTargets } from "../utils/nutrition";
@@ -139,7 +140,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
         </div>
         <div className="flex-1 text-center md:text-left">
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
-            My Health Hub
+            {user.name || "My Health Hub"}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">{user.email}</p>
 
@@ -536,7 +537,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
       )}
 
       {/* Avatar Selection Modal */}
-      {showAvatarModal && (
+      {showAvatarModal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100 relative">
             <button
@@ -567,7 +568,8 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Daily Reminder Banner */}

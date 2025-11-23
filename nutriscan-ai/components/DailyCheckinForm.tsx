@@ -51,7 +51,7 @@ const DailyCheckinForm: React.FC<Props> = ({ onSubmit }) => {
                   {val === 1 && <Frown size={32} />}
                   {val === 2 && <Meh size={32} />}
                   {val === 3 && <Smile size={32} />}
-                  {val === 4 && <Smile size={32} className="text-yellow-500" />}
+                  {val === 4 && <Smile size={32} />}
                   <span className="font-bold text-lg">{val}</span>
                 </button>
               ))}

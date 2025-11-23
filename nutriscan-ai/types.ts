@@ -41,6 +41,7 @@ export interface PastAssessment {
 export interface User {
   uid: string;
   email: string;
+  name?: string; // New field
   password?: string;
   joinedDate: string;
   currentProfile?: QuestionnaireData;
@@ -92,11 +93,17 @@ export interface DietPlanResponse {
   // New Score Fields
   nutritionScore: {
     total: number; // 0-100
-    breakdown: {
-      protein: number; // 0-100
-      vitamins: number; // 0-100
+    breakdown?: {
+      skin: number; // 0-100
+      bmi: number; // 0-100
+      sleep: number; // 0-100
       hydration: number; // 0-100
-      calories: number; // 0-100
+    };
+    handBreakdown?: {
+      keratinStrength: number;
+      hydrationLevel: number;
+      vitaminIndicators: number;
+      circulation: number;
     };
   };
   interpretation: {
@@ -110,6 +117,14 @@ export interface DietPlanResponse {
     protein_g: number | null;
     carbs_g: number | null;
     fats_g: number | null;
+    iron_mg?: number | null;
+    vitaminB12_ug?: number | null;
+    vitaminD_IU?: number | null;
+    folate_ug?: number | null;
+    zinc_mg?: number | null;
+    vitaminC_mg?: number | null;
+    biotin_ug?: number | null;
+    magnesium_mg?: number | null;
   };
   mealPlan: {
     day: string;

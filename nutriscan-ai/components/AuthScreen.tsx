@@ -11,6 +11,7 @@ interface AuthScreenProps {
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'signup', onBack, onDiscardAssessment }) => {
   const [isLogin, setIsLogin] = useState(defaultMode === 'login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +27,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    if (!email || !password) {
+    if (!email || !password || (!isLogin && !name)) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
@@ -60,6 +61,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
           const newUser: User = {
             uid: Date.now().toString(),
             email,
+            name,
             password, // Storing password in local storage is not secure, but requested for this demo
             joinedDate: new Date().toISOString(),
             history: [],
@@ -107,6 +109,27 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Full Name
+              </label>
+              <div className="relative">
+                <UserIcon
+                  className="absolute left-3 top-3 text-slate-400 dark:text-slate-500"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-colors"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
             <div className="relative">

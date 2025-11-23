@@ -5,14 +5,14 @@ import { DietPlanResponse, QuestionnaireData, ChatMessage } from '../types';
 import { sendChatMessage } from '../services/geminiService';
 
 interface Props {
-  results: DietPlanResponse;
+  results: DietPlanResponse | null;
   questionnaire: QuestionnaireData | null;
 }
 
 const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Hi! I can explain your results or answer questions about your new diet plan. What would you like to know?' }
+    { role: 'model', text: 'Hi! I am your NutriScan Assistant. How can I help you today?' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +27,7 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
   }, [messages, isOpen]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || !questionnaire) return;
+    if (!inputValue.trim()) return;
 
     const userMsg: ChatMessage = { role: 'user', text: inputValue };
     setMessages(prev => [...prev, userMsg]);
