@@ -58,53 +58,53 @@ const NUTRIENT_DISPLAY_CONFIG: Record<
   calories: {
     label: "Target Calories",
     unit: "kcal",
-    colorClass: "bg-teal-50 border-teal-100 text-teal-800",
+    colorClass: "bg-teal-50 dark:bg-teal-900/30 border-teal-100 dark:border-teal-800 text-teal-800 dark:text-teal-200",
     step: 10,
   },
   protein_g: {
     label: "Protein",
     unit: "g",
-    colorClass: "bg-blue-50 border-blue-100 text-blue-800",
+    colorClass: "bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-200",
     step: 1,
   },
   carbs_g: {
     label: "Carbs",
     unit: "g",
-    colorClass: "bg-orange-50 border-orange-100 text-orange-800",
+    colorClass: "bg-orange-50 dark:bg-orange-900/30 border-orange-100 dark:border-orange-800 text-orange-800 dark:text-orange-200",
   },
   fats_g: {
     label: "Fats",
     unit: "g",
-    colorClass: "bg-yellow-50 border-yellow-100 text-yellow-800",
+    colorClass: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-100 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
   },
   iron_mg: {
     label: "Iron",
     unit: "mg",
-    colorClass: "bg-red-50 border-red-100 text-red-800",
+    colorClass: "bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-800 text-red-800 dark:text-red-200",
     step: 0.1,
   },
   vitaminB12_ug: {
     label: "Vitamin B12",
     unit: "µg",
-    colorClass: "bg-purple-50 border-purple-100 text-purple-800",
+    colorClass: "bg-purple-50 dark:bg-purple-900/30 border-purple-100 dark:border-purple-800 text-purple-800 dark:text-purple-200",
     step: 0.1,
   },
   vitaminD_IU: {
     label: "Vitamin D",
     unit: "IU",
-    colorClass: "bg-yellow-50 border-yellow-100 text-yellow-800",
+    colorClass: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-100 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
     step: 10,
   },
   folate_ug: {
     label: "Folate",
     unit: "µg",
-    colorClass: "bg-green-50 border-green-100 text-green-800",
+    colorClass: "bg-green-50 dark:bg-green-900/30 border-green-100 dark:border-green-800 text-green-800 dark:text-green-200",
     step: 10,
   },
   zinc_mg: {
     label: "Zinc",
     unit: "mg",
-    colorClass: "bg-slate-100 border-slate-200 text-slate-700",
+    colorClass: "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300",
     step: 0.1,
   },
 };
@@ -413,7 +413,7 @@ const ResultsView: React.FC<Props> = ({
     const config = NUTRIENT_DISPLAY_CONFIG[key] || {
       label: key,
       unit: "",
-      colorClass: "bg-gray-50 text-gray-800",
+      colorClass: "bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
       step: 1,
     };
 
@@ -439,7 +439,7 @@ const ResultsView: React.FC<Props> = ({
               step={config.step || 1}
               value={editedTargets[key as keyof typeof editedTargets] || ""}
               onChange={(e) => handleTargetChange(key, e.target.value)}
-              className="w-full bg-white/50 border border-black/10 rounded px-2 py-1 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-white/50 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded px-2 py-1 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
             <span className="text-sm font-medium opacity-60 mb-2">
               {config.unit}
@@ -467,12 +467,12 @@ const ResultsView: React.FC<Props> = ({
 
       {/* Nutrition Score Section */}
       {hasScore && (
-        <div className="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-slate-100">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 mb-8 shadow-xl border border-slate-100 dark:border-slate-700">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
               Your Nutrition Health Score
             </h2>
-            <p className="text-slate-500">
+            <p className="text-slate-500 dark:text-slate-400">
               Based on your visual scan and health questionnaire
             </p>
           </div>
@@ -489,10 +489,10 @@ const ResultsView: React.FC<Props> = ({
                 <div
                   className={`text-lg font-bold ${
                     data.nutritionScore.total >= 80
-                      ? "text-green-600"
+                      ? "text-green-600 dark:text-green-400"
                       : data.nutritionScore.total >= 60
-                      ? "text-yellow-600"
-                      : "text-red-600"
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {data.nutritionScore.total >= 80
@@ -505,7 +505,7 @@ const ResultsView: React.FC<Props> = ({
             </div>
 
             {/* Divider */}
-            <div className="hidden md:block w-px h-32 bg-slate-200"></div>
+            <div className="hidden md:block w-px h-32 bg-slate-200 dark:bg-slate-700"></div>
 
             {/* Mini Rings Grid */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
@@ -535,7 +535,7 @@ const ResultsView: React.FC<Props> = ({
       )}
 
       {/* Header Summary */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-800 dark:from-teal-800 dark:to-teal-900 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
           <h2 className="text-3xl font-bold">Analysis Complete</h2>
           <div className="flex flex-wrap gap-2">
@@ -565,13 +565,13 @@ const ResultsView: React.FC<Props> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 mb-8 overflow-x-auto">
+      <div className="flex border-b border-slate-200 dark:border-slate-700 mb-8 overflow-x-auto">
         <button
           onClick={() => setActiveTab("overview")}
           className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
             activeTab === "overview"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
+              ? "text-teal-600 dark:text-teal-400 border-b-2 border-teal-600 dark:border-teal-400"
+              : "text-slate-500 dark:text-slate-400 hover:text-teal-500 dark:hover:text-teal-300"
           }`}
         >
           Clinical Findings
@@ -581,8 +581,8 @@ const ResultsView: React.FC<Props> = ({
             onClick={() => setActiveTab("plan")}
             className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
               activeTab === "plan"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
+              ? "text-teal-600 dark:text-teal-400 border-b-2 border-teal-600 dark:border-teal-400"
+              : "text-slate-500 dark:text-slate-400 hover:text-teal-500 dark:hover:text-teal-300"
             }`}
           >
             Meal Plan & Macros
@@ -592,8 +592,8 @@ const ResultsView: React.FC<Props> = ({
           onClick={() => setActiveTab("shopping")}
           className={`px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap ${
             activeTab === "shopping"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-slate-500 hover:text-teal-500"
+              ? "text-teal-600 dark:text-teal-400 border-b-2 border-teal-600 dark:border-teal-400"
+              : "text-slate-500 dark:text-slate-400 hover:text-teal-500 dark:hover:text-teal-300"
           }`}
         >
           {scanMode === "hands" ? "Recommended Supplements" : "Shopping List"}
@@ -609,7 +609,7 @@ const ResultsView: React.FC<Props> = ({
               {data.interpretation.map((item, idx) => (
                 <div
                   key={idx}
-                  className={`bg-white p-6 rounded-xl shadow-md border-t-4 ${
+                  className={`bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md border-t-4 ${
                     item.confidence === "High"
                       ? "border-red-500"
                       : item.confidence === "Medium"
@@ -618,28 +618,30 @@ const ResultsView: React.FC<Props> = ({
                   }`}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-slate-800">{formatText(item.finding)}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white">{formatText(item.finding)}</h3>
                     <span
                       className={`text-xs font-bold px-2 py-1 rounded uppercase ${
                         item.confidence === "High"
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200"
                           : item.confidence === "Medium"
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-yellow-100 text-yellow-700"
+                          ? "bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-200"
+                          : "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-200"
                       }`}
                     >
                       {item.confidence} Conf.
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 mb-4">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
                     {formatText(item.rationale)}
                   </p>
                   {item.recommendedLabsOrReferral && (
-                    <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-200">
-                      <strong className="text-slate-700 block mb-1 flex items-center gap-1">
+                    <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg text-sm border border-slate-200 dark:border-slate-700">
+                      <strong className="text-slate-700 dark:text-slate-200 block mb-1 flex items-center gap-1">
                         <AlertTriangle size={14} /> Recommendation:
                       </strong>
-                      {formatText(item.recommendedLabsOrReferral)}
+                      <span className="text-slate-600 dark:text-slate-300">
+                        {formatText(item.recommendedLabsOrReferral)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -647,17 +649,17 @@ const ResultsView: React.FC<Props> = ({
             </section>
 
             {/* Nutrient Targets */}
-            <section className="bg-white p-8 rounded-xl shadow-lg border border-slate-100">
+            <section className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <PieChartIcon className="text-teal-600" />
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <PieChartIcon className="text-teal-600 dark:text-teal-400" />
                   Daily Nutrient Targets
                 </h3>
                 {isEditingGoals ? (
                   <div className="flex gap-2">
                     <button
                       onClick={handleCancelEditGoals}
-                      className="px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      className="px-3 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
@@ -672,14 +674,14 @@ const ResultsView: React.FC<Props> = ({
                 ) : (
                   <button
                     onClick={handleEditGoals}
-                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200"
+                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors border border-teal-200 dark:border-teal-800"
                   >
                     <Edit2 size={14} />
                     Edit Goals
                   </button>
                 )}
               </div>
-              <p className="text-slate-500 mb-6 text-sm">
+              <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">
                 These targets are calculated based on your biometrics (Age, Sex,
                 Activity). The meal plan below averages to meet these goals over
                 7 days.
@@ -725,13 +727,13 @@ const ResultsView: React.FC<Props> = ({
               {data.mealPlan.map((day, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+                  className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
                 >
-                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                      <Calendar size={18} className="text-teal-600" /> {day.day}
+                  <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                    <h4 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                      <Calendar size={18} className="text-teal-600 dark:text-teal-400" /> {day.day}
                     </h4>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
                       {day.estimatedNutrition.calories} kcal • P:{" "}
                       {day.estimatedNutrition.protein_g}g
                     </div>
@@ -740,14 +742,14 @@ const ResultsView: React.FC<Props> = ({
                     {day.meals.map((meal, mIdx) => (
                       <div
                         key={mIdx}
-                        className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0 group"
+                        className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 dark:border-slate-700 last:border-0 pb-4 last:pb-0 group"
                       >
-                        <div className="w-24 text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
+                        <div className="w-24 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">
                           {getMealLabel(mIdx)}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
-                            <div className="font-semibold text-slate-800">
+                            <div className="font-semibold text-slate-800 dark:text-white">
                               {meal.description}
                             </div>
                             <button
@@ -756,8 +758,8 @@ const ResultsView: React.FC<Props> = ({
                               className={`ml-4 px-3 py-1.5 rounded-md border transition-all flex items-center gap-2 text-sm font-medium ${
                                 swappingState?.dayIndex === i &&
                                 swappingState?.mealIndex === mIdx
-                                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                                  : "bg-white text-teal-600 border-teal-200 hover:bg-teal-50 hover:border-teal-300 shadow-sm"
+                                  ? "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600 cursor-not-allowed"
+                                  : "bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-800 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:border-teal-300 dark:hover:border-teal-700 shadow-sm"
                               }`}
                               title="Swap this meal for an alternative"
                             >
@@ -773,11 +775,11 @@ const ResultsView: React.FC<Props> = ({
                                 : "Swap"}
                             </button>
                           </div>
-                          <div className="text-sm text-teal-600 mt-1 font-medium">
+                          <div className="text-sm text-teal-600 dark:text-teal-400 mt-1 font-medium">
                             {meal.portions}
                           </div>
                           {meal.substitutions && (
-                            <div className="text-xs text-slate-500 mt-1 italic">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">
                               {meal.substitutions}
                             </div>
                           )}
@@ -792,10 +794,10 @@ const ResultsView: React.FC<Props> = ({
         )}
 
         {activeTab === "shopping" && (
-          <div className="bg-white p-8 rounded-xl shadow-lg max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-4">
-                <div className="bg-teal-100 p-3 rounded-full text-teal-600">
+                <div className="bg-teal-100 dark:bg-teal-900 p-3 rounded-full text-teal-600 dark:text-teal-400">
                   {scanMode === "hands" ? (
                     <Pill size={32} />
                   ) : (
@@ -803,12 +805,12 @@ const ResultsView: React.FC<Props> = ({
                   )}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-800">
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                     {scanMode === "hands"
                       ? "Supplement Protocol"
                       : "Shopping List"}
                   </h3>
-                  <p className="text-slate-500">
+                  <p className="text-slate-500 dark:text-slate-400">
                     {scanMode === "hands"
                       ? "Recommended vitamins & minerals based on analysis."
                       : "Recommended items for your 7-day plan."}
@@ -816,11 +818,11 @@ const ResultsView: React.FC<Props> = ({
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-slate-500">Estimated Cost</div>
-                <div className="text-2xl font-bold text-teal-700">
+                <div className="text-sm text-slate-500 dark:text-slate-400">Estimated Cost</div>
+                <div className="text-2xl font-bold text-teal-700 dark:text-teal-400">
                   ~${data.estimatedWeeklyCost} CAD
                 </div>
-                <div className="text-xs text-slate-400 flex items-center justify-end gap-1 mt-1">
+                <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center justify-end gap-1 mt-1">
                   <Wallet size={12} />
                   Your Budget: ${questionnaire?.weeklyBudget}
                 </div>
@@ -831,9 +833,9 @@ const ResultsView: React.FC<Props> = ({
               {data.shoppingList.map((category, idx) => (
                 <div
                   key={idx}
-                  className="bg-slate-50 p-6 rounded-xl border border-slate-200 break-inside-avoid"
+                  className="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 break-inside-avoid"
                 >
-                  <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg">
+                  <h4 className="font-bold text-slate-800 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 text-lg">
                     {category.category}
                   </h4>
                   <div className="space-y-3">
@@ -841,9 +843,9 @@ const ResultsView: React.FC<Props> = ({
                       <div key={i} className="flex items-start gap-3">
                         <input
                           type="checkbox"
-                          className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 bg-white"
+                          className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 dark:border-slate-500 focus:ring-teal-500 bg-white dark:bg-slate-600"
                         />
-                        <span className="text-slate-700 text-sm">{item}</span>
+                        <span className="text-slate-700 dark:text-slate-200 text-sm">{item}</span>
                       </div>
                     ))}
                   </div>
@@ -852,9 +854,9 @@ const ResultsView: React.FC<Props> = ({
             </div>
 
             {/* Grocery Store Integration */}
-            <div className="mt-8 pt-8 border-t border-slate-200">
-              <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <ShoppingBag size={20} className="text-teal-600" />
+            <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+              <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                <ShoppingBag size={20} className="text-teal-600 dark:text-teal-400" />
                 Shop Ingredients Online
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -862,13 +864,13 @@ const ResultsView: React.FC<Props> = ({
                   href="https://www.walmart.ca"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all group"
                 >
                   <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
                     W
                   </div>
-                  <span className="font-bold text-slate-700">Walmart</span>
-                  <span className="text-xs text-slate-500 mt-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-200">Walmart</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Find at nearest store
                   </span>
                 </a>
@@ -877,13 +879,13 @@ const ResultsView: React.FC<Props> = ({
                   href="https://www.instacart.ca"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 transition-all group"
                 >
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
                     I
                   </div>
-                  <span className="font-bold text-slate-700">Instacart</span>
-                  <span className="text-xs text-slate-500 mt-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-200">Instacart</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Delivery available
                   </span>
                 </a>
@@ -892,13 +894,13 @@ const ResultsView: React.FC<Props> = ({
                   href="https://www.loblaws.ca"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-yellow-500 dark:hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-all group"
                 >
                   <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold text-xl mb-2 group-hover:scale-110 transition-transform shadow-md">
                     L
                   </div>
-                  <span className="font-bold text-slate-700">Loblaws</span>
-                  <span className="text-xs text-slate-500 mt-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-200">Loblaws</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Price Match Guarantee
                   </span>
                 </a>
@@ -909,8 +911,8 @@ const ResultsView: React.FC<Props> = ({
       </div>
 
       {/* Disclaimer Footer */}
-      <div className="mt-12 p-6 bg-slate-100 rounded-xl border border-slate-200 text-sm text-slate-500 text-center">
-        <strong className="block text-slate-700 mb-1 uppercase tracking-wide text-xs">
+      <div className="mt-12 p-6 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 text-center">
+        <strong className="block text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wide text-xs">
           Medical Disclaimer
         </strong>
         {data.disclaimer}
@@ -920,7 +922,7 @@ const ResultsView: React.FC<Props> = ({
       <div className="mt-8">
         <button
           onClick={handleDoneClick}
-          className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+          className="w-full bg-slate-900 dark:bg-teal-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 dark:hover:bg-teal-700 transition-all flex items-center justify-center gap-2"
         >
           Done
           <ArrowRight size={20} />
@@ -930,14 +932,14 @@ const ResultsView: React.FC<Props> = ({
       {/* Unsaved Changes Modal */}
       {showUnsavedModal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
-            <div className="flex items-center gap-3 mb-4 text-amber-600">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
+            <div className="flex items-center gap-3 mb-4 text-amber-600 dark:text-amber-500">
               <AlertTriangle size={32} />
-              <h3 className="text-2xl font-bold text-slate-800">
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                 Unsaved Assessment
               </h3>
             </div>
-            <p className="text-slate-600 mb-8">
+            <p className="text-slate-600 dark:text-slate-300 mb-8">
               You haven't saved your assessment results yet. Would you like to
               save them to your profile before exiting?
             </p>
@@ -951,13 +953,13 @@ const ResultsView: React.FC<Props> = ({
               </button>
               <button
                 onClick={handleConfirmExit}
-                className="w-full bg-white border-2 border-slate-200 hover:border-red-200 text-slate-700 hover:text-red-600 font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 hover:border-red-200 dark:hover:border-red-500 text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 font-bold py-3 rounded-xl transition-colors"
               >
                 Exit Without Saving
               </button>
               <button
                 onClick={() => setShowUnsavedModal(false)}
-                className="w-full text-slate-400 hover:text-slate-600 font-medium py-2"
+                className="w-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium py-2"
               >
                 Cancel
               </button>

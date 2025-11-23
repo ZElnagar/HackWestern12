@@ -59,6 +59,14 @@ const App: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (user?.preferences?.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [user]);
+
   const handleCameraComplete = (capturedImages: ImageCaptureSet) => {
     setImages(capturedImages);
 
@@ -429,13 +437,13 @@ const App: React.FC = () => {
       case AppState.LANDING:
         return (
           <div className="text-center max-w-2xl mx-auto mt-12 px-4">
-            <div className="bg-white p-4 rounded-full shadow-lg inline-flex mb-8">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-full shadow-lg inline-flex mb-8 transition-colors">
               <ScanFace size={64} className="text-teal-600" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
               NutriScan <span className="text-teal-600">AI</span>
             </h1>
-            <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+            <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
               Advanced visual health screening combined with AI-driven nutrition
               planning. Detect visible health cues and get a medically-informed
               diet plan in minutes.
@@ -453,7 +461,7 @@ const App: React.FC = () => {
               {user ? (
                 <button
                   onClick={() => setAppState(AppState.PROFILE)}
-                  className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                  className="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-600 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
                 >
                   <ScanFace size={24} />
                   My Profile
@@ -464,7 +472,7 @@ const App: React.FC = () => {
                     setAuthMode('login');
                     setAppState(AppState.AUTH);
                   }}
-                  className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                  className="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-600 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
                 >
                   <LogIn size={24} />
                   Log In
@@ -497,6 +505,13 @@ const App: React.FC = () => {
             onComplete={handleAuthComplete}
             defaultMode={authMode}
             onBack={() => setAppState(AppState.LANDING)}
+            onDiscardAssessment={() => {
+              setImages(null);
+              setQuestionnaire(null);
+              setResults(null);
+              setDailyResults(null);
+              setDailyCheckin(null);
+            }}
           />
         );
 
@@ -561,10 +576,10 @@ const App: React.FC = () => {
         return (
           <div className="flex flex-col items-center justify-center h-96">
             <Loader2 className="animate-spin text-teal-600 mb-6" size={64} />
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
               Analyzing Health Data
             </h2>
-            <p className="text-slate-500 text-center max-w-md">
+            <p className="text-slate-500 dark:text-slate-400 text-center max-w-md">
               Our AI is examining your scans for visual biomarkers and
               synthesizing your personalized nutrition protocol. This may take
               up to 30 seconds.
@@ -595,13 +610,13 @@ const App: React.FC = () => {
       case AppState.ERROR:
         return (
           <div className="text-center max-w-md mx-auto mt-20">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
+            <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
               Analysis Failed
             </h2>
-            <p className="text-slate-600 mb-6">{error || "Unknown error"}</p>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">{error || "Unknown error"}</p>
             <button
               onClick={() => setAppState(AppState.LANDING)}
-              className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+              className="px-6 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
             >
               Return Home
             </button>
@@ -614,16 +629,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
       {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setAppState(AppState.LANDING)}
           >
             <ScanFace className="text-teal-600" />
-            <span className="font-bold text-xl text-slate-900">
+            <span className="font-bold text-xl text-slate-900 dark:text-white">
               NutriScan AI
             </span>
           </div>
@@ -631,7 +646,7 @@ const App: React.FC = () => {
             {appState !== AppState.LANDING &&
               appState !== AppState.PROFILE &&
               appState !== AppState.DASHBOARD && (
-                <div className="text-sm font-medium text-slate-500 hidden md:block">
+                <div className="text-sm font-medium text-slate-500 dark:text-slate-400 hidden md:block">
                   {appState === AppState.CAMERA && "Step 1: Scan"}
                   {appState === AppState.QUESTIONNAIRE && "Step 2: Profile"}
                   {appState === AppState.AUTH && "Step 3: Account"}
@@ -657,7 +672,7 @@ const App: React.FC = () => {
 
       {/* Save Notification Toast */}
       {showSaveNotification && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4 fade-in z-50">
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-slate-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4 fade-in z-50">
           <div className="bg-teal-500 rounded-full p-1">
             <ScanFace size={16} className="text-white" />
           </div>
@@ -668,10 +683,10 @@ const App: React.FC = () => {
       {/* Profile Choice Modal */}
       {showProfileChoiceModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100 relative">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100 relative">
             <button
               onClick={() => setShowProfileChoiceModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -688,10 +703,10 @@ const App: React.FC = () => {
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
-            <h3 className="text-2xl font-bold text-slate-800 mb-4">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">
               Use Existing Profile?
             </h3>
-            <p className="text-slate-600 mb-6">
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
               We have your health profile on file. Would you like to use it for
               this assessment, or update it with new information?
             </p>
@@ -714,7 +729,7 @@ const App: React.FC = () => {
                   setAppState(AppState.CAMERA);
                   setShowProfileChoiceModal(false);
                 }}
-                className="w-full bg-white border-2 border-slate-200 hover:border-teal-600 text-slate-700 hover:text-teal-600 font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-teal-600 dark:hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-500 font-bold py-3 rounded-xl transition-colors"
               >
                 Update Profile
               </button>

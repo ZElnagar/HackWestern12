@@ -65,22 +65,22 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
 
       {/* Chat Window */}
       <div
-        className={`fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transition-all duration-300 origin-bottom-right z-50 flex flex-col ${
+        className={`fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-300 origin-bottom-right z-50 flex flex-col ${
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
         }`}
         style={{ height: '500px', maxHeight: '80vh' }}
       >
         {/* Header */}
-        <div className="bg-teal-600 p-4 text-white flex items-center gap-2">
+        <div className="bg-teal-600 dark:bg-teal-700 p-4 text-white flex items-center gap-2">
           <Bot size={24} />
           <div>
             <h3 className="font-bold">NutriScan Assistant</h3>
-            <p className="text-xs text-teal-100">Ask about your results</p>
+            <p className="text-xs text-teal-100 dark:text-teal-200">Ask about your results</p>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
           {messages.map((msg, idx) => (
             <div
               key={idx}
@@ -89,8 +89,8 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === 'user'
-                    ? 'bg-teal-600 text-white rounded-br-none'
-                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-sm'
+                    ? 'bg-teal-600 dark:bg-teal-700 text-white rounded-br-none'
+                    : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none shadow-sm'
                 }`}
               >
                 {msg.text}
@@ -99,11 +99,11 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
           ))}
           {isLoading && (
              <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
                     <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150"></div>
+                        <div className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce delay-150"></div>
                     </div>
                 </div>
              </div>
@@ -112,7 +112,7 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white border-t border-slate-100">
+        <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
           <div className="flex gap-2">
             <input
               type="text"
@@ -120,13 +120,13 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type a question..."
-              className="flex-1 px-4 py-2 border border-slate-300 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
               disabled={isLoading}
             />
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isLoading}
-              className="p-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-teal-600 dark:bg-teal-600 text-white rounded-full hover:bg-teal-700 dark:hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send size={20} />
             </button>

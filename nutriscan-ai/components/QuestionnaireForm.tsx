@@ -192,13 +192,13 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-      <div className="mb-8 border-b border-slate-100 pb-4">
-        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Activity className="text-teal-600" />
+    <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 transition-colors duration-200">
+      <div className="mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <Activity className="text-teal-600 dark:text-teal-400" />
           Health Profile
         </h2>
-        <p className="text-slate-500 mt-1">
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
           Help the AI personalize your nutrition plan.
         </p>
       </div>
@@ -207,22 +207,22 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
         {/* Biometrics */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs">
                 1
               </div>
               Biometrics
             </h3>
 
             {/* Unit Toggle */}
-            <div className="flex bg-slate-100 p-1 rounded-lg">
+            <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
               <button
                 type="button"
                 onClick={() => setUnitSystem("metric")}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                   unitSystem === "metric"
-                    ? "bg-white text-teal-700 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-600 text-teal-700 dark:text-teal-300 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
               >
                 Metric (kg/cm)
@@ -232,8 +232,8 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 onClick={() => setUnitSystem("imperial")}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                   unitSystem === "imperial"
-                    ? "bg-white text-teal-700 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-600 text-teal-700 dark:text-teal-300 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
               >
                 Imperial (lbs/ft)
@@ -243,7 +243,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Age
               </label>
               <input
@@ -252,8 +252,8 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 value={formData.age}
                 onChange={handleChange}
                 disabled={!!initialData}
-                className={`w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 ${
-                  !!initialData ? "bg-slate-100 cursor-not-allowed" : "bg-white"
+                className={`w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white ${
+                  !!initialData ? "bg-slate-100 dark:bg-slate-700 cursor-not-allowed" : "bg-white dark:bg-slate-700"
                 }`}
                 required
               />
@@ -264,7 +264,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Sex
               </label>
               <select
@@ -272,8 +272,8 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 value={formData.sex}
                 onChange={handleChange}
                 disabled={!!initialData}
-                className={`w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 ${
-                  !!initialData ? "bg-slate-100 cursor-not-allowed" : "bg-white"
+                className={`w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white ${
+                  !!initialData ? "bg-slate-100 dark:bg-slate-700 cursor-not-allowed" : "bg-white dark:bg-slate-700"
                 }`}
               >
                 <option value="female">Female</option>
@@ -284,7 +284,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
             {unitSystem === "metric" ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Weight (kg)
                   </label>
                   <input
@@ -292,12 +292,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                     name="weightKg"
                     value={formData.weightKg}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Height (cm)
                   </label>
                   <input
@@ -305,7 +305,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                     name="heightCm"
                     value={formData.heightCm}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                     required
                   />
                 </div>
@@ -313,7 +313,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
             ) : (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Weight (lbs)
                   </label>
                   <input
@@ -321,13 +321,13 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                     name="weightLbs"
                     value={imperialData.weightLbs}
                     onChange={handleImperialChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                     required
                   />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Height (ft)
                     </label>
                     <input
@@ -335,12 +335,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                       name="heightFt"
                       value={imperialData.heightFt}
                       onChange={handleImperialChange}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                       required
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                       (in)
                     </label>
                     <input
@@ -348,7 +348,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                       name="heightIn"
                       value={imperialData.heightIn}
                       onChange={handleImperialChange}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                       required
                     />
                   </div>
@@ -360,14 +360,14 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
           {formData.sex === "female" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Pregnancy Status
                 </label>
                 <select
                   name="pregnancyStatus"
                   value={formData.pregnancyStatus}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                 >
                   <option value="not_pregnant">Not Pregnant</option>
                   <option value="pregnant_t1">First Trimester</option>
@@ -376,14 +376,14 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Breastfeeding
                 </label>
                 <select
                   name="breastfeedingStatus"
                   value={formData.breastfeedingStatus}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                 >
                   <option value="not_breastfeeding">No</option>
                   <option value="breastfeeding_exclusive">Exclusive</option>
@@ -394,7 +394,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
           )}
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Activity Level
             </label>
 
@@ -404,7 +404,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                   name="activityLevel"
                   value={formData.activityLevel}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                 >
                   <option value="sedentary">
                     Sedentary (Little or no exercise)
@@ -424,33 +424,33 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 </select>
 
                 <div className="flex items-center gap-4 my-2">
-                  <div className="h-px bg-slate-200 flex-1"></div>
+                  <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
                   <span className="text-xs text-slate-400 font-medium uppercase">
                     Or Sync Device
                   </span>
-                  <div className="h-px bg-slate-200 flex-1"></div>
+                  <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
                 </div>
 
                 <button
                   type="button"
                   disabled={true}
-                  className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center gap-2 text-slate-400 cursor-not-allowed bg-slate-50"
+                  className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center gap-2 text-slate-400 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50"
                 >
                   <Watch size={20} />
                   Connect Google Fit / Apple Health (Coming Soon)
                 </button>
               </div>
             ) : (
-              <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-teal-100 p-2 rounded-full text-teal-700">
+                  <div className="bg-teal-100 dark:bg-teal-900 p-2 rounded-full text-teal-700 dark:text-teal-300">
                     <CheckCircle size={20} />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-teal-900">
+                    <div className="text-sm font-bold text-teal-900 dark:text-teal-100">
                       Device Synced
                     </div>
-                    <div className="text-xs text-teal-700">
+                    <div className="text-xs text-teal-700 dark:text-teal-300">
                       Avg Steps: {wearableData.dailySteps.toLocaleString()} •
                       Sleep: {wearableData.averageSleepHours}h
                     </div>
@@ -466,7 +466,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                       activityLevel: "moderate",
                     }));
                   }}
-                  className="text-xs text-teal-600 underline hover:text-teal-800"
+                  className="text-xs text-teal-600 dark:text-teal-400 underline hover:text-teal-800 dark:hover:text-teal-300"
                 >
                   Disconnect
                 </button>
@@ -477,18 +477,18 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
 
         {/* Budget Section */}
         <section>
-          <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">
+          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs">
               2
             </div>
             Weekly Budget (Ontario, CA Pricing)
           </h3>
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div className="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Weekly Grocery Budget (CAD)
               </label>
-              <span className="text-lg font-bold text-teal-700">
+              <span className="text-lg font-bold text-teal-700 dark:text-teal-400">
                 ${formData.weeklyBudget}
               </span>
             </div>
@@ -500,9 +500,9 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
               step="10"
               value={formData.weeklyBudget}
               onChange={handleChange}
-              className="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-teal-600"
+              className="w-full h-2 bg-slate-300 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer accent-teal-600"
             />
-            <div className="flex justify-between text-xs text-slate-500 mt-2">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-2">
               <span>$50 (Thrifty)</span>
               <span>$175 (Comfortable)</span>
               <span>$300+ (Premium)</span>
@@ -517,8 +517,8 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
 
         {/* Diet & Health */}
         <section>
-          <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">
+          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs">
               3
             </div>
             Restrictions & Preferences
@@ -526,7 +526,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Allergies & Intolerances
               </label>
               <input
@@ -535,12 +535,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 placeholder="e.g., Peanuts, Gluten, Shellfish"
                 value={formData.allergies}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Religious or Ethical Restrictions
               </label>
               <input
@@ -549,12 +549,12 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 placeholder="e.g., Halal, Kosher, No Pork, Vegan"
                 value={formData.religiousRestrictions}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Medications
               </label>
               <input
@@ -563,7 +563,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 placeholder="e.g., Warfarin, Metformin, Statins (Optional)"
                 value={formData.medications}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
               />
               <p className="text-xs text-slate-400 mt-1">
                 Used to check for food-drug interactions.
@@ -572,14 +572,14 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Dietary Preference
                 </label>
                 <select
                   name="dietPreferences"
                   value={formData.dietPreferences}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                 >
                   <option value="omnivore">No Preference (Omnivore)</option>
                   <option value="vegetarian">Vegetarian</option>
@@ -590,7 +590,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Disliked Foods
                 </label>
                 <input
@@ -599,7 +599,7 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit, initialData }) => {
                   placeholder="e.g., Mushrooms, Cilantro"
                   value={formData.dislikedFoods}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 bg-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-800 dark:text-white bg-white dark:bg-slate-700"
                 />
               </div>
             </div>

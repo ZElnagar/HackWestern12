@@ -48,19 +48,19 @@ const HealthRing: React.FC<Props> = ({ score, label, size = 'small', color }) =>
                 stroke="none"
               >
                 <Cell fill={ringColor} />
-                <Cell fill="#e2e8f0" />
+                <Cell fill="var(--ring-track)" />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
         </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`font-bold text-slate-800 ${textSize}`}>
+          <span className={`font-bold text-slate-800 dark:text-white ${textSize}`}>
             {score}
           </span>
         </div>
       </div>
-      <span className={`mt-2 font-medium text-slate-600 ${labelSize} text-center`}>
+      <span className={`mt-2 font-medium text-slate-600 dark:text-slate-300 ${labelSize} text-center`}>
         {label}
       </span>
     </div>

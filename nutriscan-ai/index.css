@@ -16,12 +16,24 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --ring-track: #e2e8f0;
+}
+
+.dark {
+  color-scheme: dark;
+  --ring-track: #334155;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+    --ring-track: #334155;
+  }
 }
 
 @keyframes fadeScale {

@@ -6,18 +6,21 @@ interface AuthScreenProps {
   onComplete: (user: User) => void;
   defaultMode?: 'login' | 'signup';
   onBack?: () => void;
+  onDiscardAssessment?: () => void;
 }
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'signup', onBack }) => {
+const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'signup', onBack, onDiscardAssessment }) => {
   const [isLogin, setIsLogin] = useState(defaultMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showExistingAccountOption, setShowExistingAccountOption] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowExistingAccountOption(false);
     setLoading(true);
 
     // Simulate network delay
@@ -51,7 +54,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
         // Signup Logic
         const existingUser = users.find(u => u.email === email);
         if (existingUser) {
-          setError('Email already in use. Please sign in.');
+          setError('Account already exists.');
+          setShowExistingAccountOption(true);
         } else {
           const newUser: User = {
             uid: Date.now().toString(),
@@ -79,23 +83,23 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
 
   return (
     <div className="max-w-md mx-auto mt-10 px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 relative">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 relative transition-colors duration-300">
         {onBack && (
           <button 
             onClick={onBack}
-            className="absolute top-4 left-4 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute top-4 left-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <ArrowLeft size={24} className="rotate-360" />
           </button>
         )}
         <div className="text-center mb-8">
-          <div className="bg-teal-100 p-3 rounded-full inline-flex mb-4">
-            <UserIcon className="text-teal-600" size={32} />
+          <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-full inline-flex mb-4">
+            <UserIcon className="text-teal-600 dark:text-teal-400" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h2>
-          <p className="text-slate-500 mt-2">
+          <p className="text-slate-500 dark:text-slate-400 mt-2">
             {isLogin 
               ? 'Sign in to view your assessment results' 
               : 'Sign up to save your health profile'}
@@ -104,37 +108,52 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 text-slate-400" size={20} />
+              <Mail className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-colors"
                 placeholder="you@example.com"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-400" size={20} />
+              <Lock className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-colors"
                 placeholder="••••••••"
               />
             </div>
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">
+            <div className="text-red-500 dark:text-red-400 text-sm text-center bg-red-50 dark:bg-red-900/20 p-2 rounded">
               {error}
             </div>
+          )}
+
+          {showExistingAccountOption && (
+            <button
+              type="button"
+              onClick={() => {
+                if (onDiscardAssessment) onDiscardAssessment();
+                setIsLogin(true);
+                setError('');
+                setShowExistingAccountOption(false);
+              }}
+              className="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
+            >
+              Sign In & Discard Assessment
+            </button>
           )}
 
           <button
@@ -152,31 +171,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, defaultMode = 'sign
         </form>
 
         <div className="mt-6 text-center">
-          {/* Only allow switching if we are in signup mode (meaning we came from assessment) 
-              OR if we are in login mode but want to switch to signup? 
-              User said: "Dont allow users to create an accout by preessing login thne "sign up""
-              So if defaultMode is login, we hide the switch to signup.
-          */}
-          {defaultMode === 'signup' && (
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-teal-600 hover:text-teal-700 font-medium text-sm"
-            >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"}
-            </button>
-          )}
-          
-          {defaultMode === 'login' && !isLogin && (
-             // If somehow we are in signup mode but default was login (shouldn't happen with logic above but for safety)
-             <button
-             onClick={() => setIsLogin(true)}
-             className="text-teal-600 hover:text-teal-700 font-medium text-sm"
-           >
-             Already have an account? Sign in
-           </button>
-          )}
+          {/* Toggle removed as per requirements */}
         </div>
       </div>
     </div>

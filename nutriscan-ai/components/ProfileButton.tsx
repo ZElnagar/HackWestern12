@@ -10,7 +10,7 @@ const ProfileButton: React.FC<ProfileButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all text-teal-600 border border-slate-100"
+      className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-md hover:shadow-lg transition-all text-teal-600 dark:text-teal-400 border border-slate-100 dark:border-slate-700"
       title="My Profile"
     >
       <UserIcon size={24} />

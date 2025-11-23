@@ -46,6 +46,10 @@ export interface User {
   currentProfile?: QuestionnaireData;
   history: PastAssessment[];
   streak?: number;
+  avatar?: string; // 'default' | 'smile' | 'ghost' | 'bot'
+  preferences?: {
+    darkMode: boolean;
+  };
 }
 
 export interface WearableData {

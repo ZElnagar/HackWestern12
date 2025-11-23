@@ -65,6 +65,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [error, setError] = useState<string>("");
   const [videoReady, setVideoReady] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const steps = mode === "hands" ? HAND_STEPS : FACE_STEPS;
 
   const startCamera = useCallback(async () => {
@@ -211,14 +215,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 bg-slate-100 rounded-xl p-8 text-center">
-        <div className="bg-red-100 p-4 rounded-full mb-4 text-red-600">
+      <div className="flex flex-col items-center justify-center h-96 bg-slate-100 dark:bg-slate-800 rounded-xl p-8 text-center">
+        <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full mb-4 text-red-600 dark:text-red-400">
           <AlertCircle size={48} />
         </div>
-        <h3 className="text-xl font-semibold text-slate-800 mb-2">
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-2">
           Camera Error
         </h3>
-        <p className="text-slate-600 mb-6">{error}</p>
+        <p className="text-slate-600 dark:text-slate-300 mb-6">{error}</p>
         <button
           onClick={startCamera}
           className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
@@ -240,15 +244,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-slate-800">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
           Visual Health Scan
         </h2>
-        <span className="text-sm font-medium px-3 py-1 bg-teal-100 text-teal-700 rounded-full">
+        <span className="text-sm font-medium px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full">
           Step {currentStep + 1} of 3: {currentStepData.label}
         </span>
       </div>
 
-      <div className="relative bg-slate-900 rounded-2xl overflow-hidden aspect-[4/3] shadow-lg border-4 border-slate-200">
+      <div className="relative bg-slate-900 rounded-2xl overflow-hidden aspect-[4/3] shadow-lg border-4 border-slate-200 dark:border-slate-700">
         {/* Instructions Overlay */}
         <div className="absolute top-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
           <div className="bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg animate-fade-in">
@@ -318,7 +322,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           <>
             <button
               onClick={handleRetake}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 transition"
+              className="flex items-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition"
             >
               <RotateCcw size={20} />
               Retake
@@ -349,7 +353,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             {currentStep > 0 && (
               <button
                 onClick={handleSkip}
-                className="flex items-center gap-2 px-6 py-4 bg-slate-200 text-slate-600 font-semibold rounded-full transition hover:bg-slate-300"
+                className="flex items-center gap-2 px-6 py-4 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-full transition hover:bg-slate-300 dark:hover:bg-slate-600"
               >
                 Skip
                 <SkipForward size={20} />
@@ -361,7 +365,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               className={`flex items-center gap-2 px-8 py-4 font-semibold rounded-full transition shadow-lg hover:shadow-xl transform active:scale-95 ${
                 videoReady
                   ? "bg-teal-600 text-white hover:bg-teal-700"
-                  : "bg-slate-400 text-slate-200 cursor-not-allowed"
+                  : "bg-slate-400 dark:bg-slate-700 text-slate-200 dark:text-slate-500 cursor-not-allowed"
               }`}
             >
               <Camera size={24} />
@@ -380,7 +384,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                 ? "w-8 bg-teal-600"
                 : captures[step.id as keyof ImageCaptureSet]
                 ? "w-2 bg-green-500"
-                : "w-2 bg-slate-300"
+                : "w-2 bg-slate-300 dark:bg-slate-700"
             }`}
           />
         ))}
