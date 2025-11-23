@@ -293,8 +293,8 @@ const App: React.FC = () => {
       setIsResultSaved(true);
       setAppState(AppState.RESULTS); // Show results immediately after signup
     } else {
-      // Just logging in
-      setAppState(AppState.DASHBOARD);
+      // Just logging in - go directly to ProfileHub
+      setAppState(AppState.PROFILE);
     }
   };
 
@@ -452,11 +452,11 @@ const App: React.FC = () => {
               </button>
               {user ? (
                 <button
-                  onClick={() => setAppState(AppState.DASHBOARD)}
+                  onClick={() => setAppState(AppState.PROFILE)}
                   className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-xl font-semibold px-10 py-4 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
                 >
                   <ScanFace size={24} />
-                  Dashboard
+                  My Profile
                 </button>
               ) : (
                 <button

@@ -294,10 +294,9 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                 <Calendar className="text-teal-600" />
                 Assessment History
               </h3>
-              {user.history.filter((h) => h.type === "full").length > 0 ? (
+              {user.history.length > 0 ? (
                 <div className="space-y-4">
                   {user.history
-                    .filter((h) => h.type === "full")
                     .slice()
                     .reverse()
                     .map((assessment) => (
@@ -309,12 +308,16 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                         <div className="flex items-center gap-4">
                           <div
                             className={`p-2 rounded-full ${
-                              assessment.scanType === "hands"
+                              assessment.type === "daily"
+                                ? "bg-orange-100 text-orange-600"
+                                : assessment.scanType === "hands"
                                 ? "bg-blue-100 text-blue-600"
                                 : "bg-teal-100 text-teal-600"
                             }`}
                           >
-                            {assessment.scanType === "hands" ? (
+                            {assessment.type === "daily" ? (
+                              <Calendar size={20} />
+                            ) : assessment.scanType === "hands" ? (
                               <Hand size={20} />
                             ) : (
                               <ScanFace size={20} />
@@ -324,12 +327,16 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                             <div className="flex items-center gap-2 mb-1">
                               <span
                                 className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
-                                  assessment.scanType === "hands"
+                                  assessment.type === "daily"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : assessment.scanType === "hands"
                                     ? "bg-blue-100 text-blue-700"
                                     : "bg-teal-100 text-teal-700"
                                 }`}
                               >
-                                {assessment.scanType === "hands"
+                                {assessment.type === "daily"
+                                  ? "Daily Assessment"
+                                  : assessment.scanType === "hands"
                                   ? "Hand Scan"
                                   : "Face Scan"}
                               </span>
@@ -344,7 +351,9 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
                               </span>
                             </div>
                             <p className="text-sm text-slate-500 line-clamp-1">
-                              {(assessment.results as any).summary}
+                              {(assessment.results as any).summary ||
+                                (assessment.results as any).note ||
+                                "Assessment completed"}
                             </p>
                           </div>
                         </div>
@@ -355,7 +364,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
               ) : (
                 <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                   <p className="text-slate-500">
-                    No full assessments completed yet.
+                    No assessments completed yet.
                   </p>
                 </div>
               )}
