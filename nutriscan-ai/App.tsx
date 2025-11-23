@@ -206,8 +206,8 @@ const App: React.FC = () => {
       // Delay navigation to show the notification
       setTimeout(() => {
         setShowSaveNotification(false);
-        setAppState(AppState.DASHBOARD);
-      }, 2000);
+        setAppState(AppState.PROFILE);
+      }, 750);
     }
   };
 

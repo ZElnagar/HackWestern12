@@ -119,6 +119,10 @@ export const generateDietPlan = async (
       3. If facial analysis shows 'dark circles' AND sleep data is low, attribute the dark circles primarily to lack of sleep in your rationale.
     ` : '- No wearable data provided; rely on self-reported activity level.'}
 
+    **CALORIC CALCULATION INSTRUCTION**:
+    - Use the **Katch-McArdle Formula** to calculate the basal metabolic rate (BMR) if body fat percentage is estimable from visual analysis or BMI. Otherwise, use the **Mifflin-St Jeor Equation**.
+    - **CRITICAL**: Ensure the caloric target accounts for the activity level provided (Sedentary: 1.2, Light: 1.375, Moderate: 1.55, Active: 1.725, Very Active: 1.9).
+
     **BUDGET CONSTRAINT (CRITICAL)**:
     - The patient has a strict weekly grocery budget of **$${data.weeklyBudget} CAD**.
     - **Use CURRENT ESTIMATED PRICING for ONTARIO, CANADA.**
@@ -152,7 +156,7 @@ export const generateDietPlan = async (
        - **Meal Plan**: Provide a simple "Supplement Schedule" (Morning/Noon/Night) in the meal plan structure. You can leave calories/macros as 0 or estimates.
        - **estimatedWeeklyCost**: Estimate the cost of these supplements.
        ` : `
-       - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Iron, B12, D, Folate, Zinc) based on the patient's age, sex, and biometrics. Do NOT return null.**
+       - A nutrient-target summary. **CRITICAL: Calculate specific daily targets (RDAs/DRIs) for ALL listed nutrients (Calories, Protein, Carbs, Fats) based on the patient's age, sex, and biometrics. Do NOT return null.**
        - **PROTEIN TARGET RULE**: You MUST calculate the protein target as AT LEAST **1.76g per kg** of body weight (equivalent to 0.8g per lb). Use the patient's weight from the data.
        - A 7-day meal plan. **ENSURE the 7-day plan averages out to meet the daily nutrient targets AND fits within the $${data.weeklyBudget} CAD budget.**
        - Substitutions for restrictions.

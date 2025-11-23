@@ -248,7 +248,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             playsInline
             muted
             onCanPlay={handleVideoCanPlay}
-            className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
+            className={`w-full h-full object-cover object-center transition-opacity duration-300 scale-x-[-1] ${
               videoReady ? "opacity-100" : "opacity-0"
             }`}
           />

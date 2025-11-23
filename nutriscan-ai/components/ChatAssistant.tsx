@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 import { DietPlanResponse, QuestionnaireData, ChatMessage } from '../types';
 import { sendChatMessage } from '../services/geminiService';
@@ -50,7 +51,7 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
     }
   };
 
-  return (
+  return createPortal(
     <>
       {/* Floating Action Button */}
       <button
@@ -132,7 +133,8 @@ const ChatAssistant: React.FC<Props> = ({ results, questionnaire }) => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

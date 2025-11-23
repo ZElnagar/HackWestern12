@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { DietPlanResponse, QuestionnaireData } from "../types";
 import {
   AlertTriangle,
@@ -53,31 +54,26 @@ const NUTRIENT_DISPLAY_CONFIG: Record<
     unit: "g",
     colorClass: "bg-blue-50 border-blue-100 text-blue-800",
   },
-  iron_mg: {
-    label: "Iron",
-    unit: "mg",
-    colorClass: "bg-red-50 border-red-100 text-red-800",
+  carbs_g: {
+    label: "Carbs",
+    unit: "g",
+    colorClass: "bg-orange-50 border-orange-100 text-orange-800",
   },
-  vitaminB12_ug: {
-    label: "Vitamin B12",
-    unit: "µg",
-    colorClass: "bg-purple-50 border-purple-100 text-purple-800",
-  },
-  vitaminD_IU: {
-    label: "Vitamin D",
-    unit: "IU",
+  fats_g: {
+    label: "Fats",
+    unit: "g",
     colorClass: "bg-yellow-50 border-yellow-100 text-yellow-800",
-  },
-  folate_ug: {
-    label: "Folate",
-    unit: "µg",
-    colorClass: "bg-green-50 border-green-100 text-green-800",
-  },
-  zinc_mg: {
-    label: "Zinc",
-    unit: "mg",
-    colorClass: "bg-slate-100 border-slate-200 text-slate-700",
-  },
+  }
+};
+
+const formatText = (text: string) => {
+  if (!text) return "";
+  return text.replace(/m\^2/g, "m²");
+};
+
+const getMealLabel = (index: number) => {
+  const labels = ["Breakfast", "Lunch", "Dinner", "Snack"];
+  return labels[index] || `Meal ${index + 1}`;
 };
 
 const ResultsView: React.FC<Props> = ({
@@ -97,6 +93,10 @@ const ResultsView: React.FC<Props> = ({
     mealIndex: number;
   } | null>(null);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleDoneClick = () => {
     if (!isSaved) {
@@ -310,29 +310,9 @@ const ResultsView: React.FC<Props> = ({
       <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-8 text-white mb-8 shadow-xl relative">
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-3xl font-bold">Analysis Complete</h2>
-          <button
-            onClick={onSave}
-            disabled={isSaved}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-              isSaved
-                ? "bg-white/20 text-white/80 cursor-default"
-                : "bg-white text-teal-700 hover:bg-teal-50 shadow-lg"
-            }`}
-          >
-            {isSaved ? (
-              <>
-                <CheckCircle size={20} />
-                Saved to Profile
-              </>
-            ) : (
-              <>
-                <Save size={20} />
-                Save Result
-              </>
-            )}
-          </button>
+          {/* Removed Save Result button as per request */}
         </div>
-        <p className="text-lg opacity-90 leading-relaxed">{data.summary}</p>
+        <p className="text-lg opacity-90 leading-relaxed">{formatText(data.summary)}</p>
 
         <div className="mt-6 flex flex-wrap gap-3">
           {data.implementationChecklist.slice(0, 3).map((item, idx) => (
@@ -341,7 +321,7 @@ const ResultsView: React.FC<Props> = ({
               className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium border border-white/20"
             >
               <CheckCircle size={16} />
-              {item}
+              {formatText(item)}
             </div>
           ))}
         </div>
@@ -401,7 +381,7 @@ const ResultsView: React.FC<Props> = ({
                   }`}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-slate-800">{item.finding}</h3>
+                    <h3 className="font-bold text-slate-800">{formatText(item.finding)}</h3>
                     <span
                       className={`text-xs font-bold px-2 py-1 rounded uppercase ${
                         item.confidence === "High"
@@ -415,14 +395,14 @@ const ResultsView: React.FC<Props> = ({
                     </span>
                   </div>
                   <p className="text-sm text-slate-600 mb-4">
-                    {item.rationale}
+                    {formatText(item.rationale)}
                   </p>
                   {item.recommendedLabsOrReferral && (
                     <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-200">
                       <strong className="text-slate-700 block mb-1 flex items-center gap-1">
                         <AlertTriangle size={14} /> Recommendation:
                       </strong>
-                      {item.recommendedLabsOrReferral}
+                      {formatText(item.recommendedLabsOrReferral)}
                     </div>
                   )}
                 </div>
@@ -455,15 +435,18 @@ const ResultsView: React.FC<Props> = ({
                       data.nutrientTargets.protein_g,
                       false
                     )}
+                     {renderNutrientCard(
+                      "carbs_g",
+                      data.nutrientTargets.carbs_g,
+                      false
+                    )}
+                     {renderNutrientCard(
+                      "fats_g",
+                      data.nutrientTargets.fats_g,
+                      false
+                    )}
                   </>
                 )}
-
-                {/* Micros - Now showing all of them regardless of 'null' status since prompt ensures data */}
-                {Object.entries(data.nutrientTargets)
-                  .filter(([key]) => key !== "calories" && key !== "protein_g")
-                  .map(([key, value]) =>
-                    renderNutrientCard(key, value as number | null, false)
-                  )}
               </div>
             </section>
 
@@ -497,7 +480,7 @@ const ResultsView: React.FC<Props> = ({
                         className="flex flex-col md:flex-row md:items-start gap-4 border-b border-slate-100 last:border-0 pb-4 last:pb-0 group"
                       >
                         <div className="w-24 text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
-                          {meal.name}
+                          {getMealLabel(mIdx)}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
@@ -628,7 +611,7 @@ const ResultsView: React.FC<Props> = ({
       </div>
 
       {/* Unsaved Changes Modal */}
-      {showUnsavedModal && (
+      {showUnsavedModal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
             <div className="flex items-center gap-3 mb-4 text-amber-600">
@@ -660,7 +643,8 @@ const ResultsView: React.FC<Props> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

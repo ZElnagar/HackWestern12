@@ -41,11 +41,8 @@ export const RESPONSE_SCHEMA: Schema = {
       properties: {
         calories: { type: Type.NUMBER },
         protein_g: { type: Type.NUMBER },
-        iron_mg: { type: Type.NUMBER },
-        vitaminB12_ug: { type: Type.NUMBER },
-        vitaminD_IU: { type: Type.NUMBER },
-        folate_ug: { type: Type.NUMBER },
-        zinc_mg: { type: Type.NUMBER }
+        carbs_g: { type: Type.NUMBER },
+        fats_g: { type: Type.NUMBER }
       }
     },
     mealPlan: {

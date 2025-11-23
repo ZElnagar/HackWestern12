@@ -102,11 +102,8 @@ export interface DietPlanResponse {
   nutrientTargets: {
     calories: number | null;
     protein_g: number | null;
-    iron_mg: number | null;
-    vitaminB12_ug: number | null;
-    vitaminD_IU: number | null;
-    folate_ug: number | null;
-    zinc_mg: number | null;
+    carbs_g: number | null;
+    fats_g: number | null;
   };
   mealPlan: {
     day: string;
