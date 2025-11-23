@@ -15,6 +15,8 @@ import {
   Pill,
   RefreshCw,
   Loader2,
+  Edit2,
+  X,
 } from "lucide-react";
 import {
   BarChart,
@@ -33,7 +35,7 @@ import { swapMeal } from "../services/geminiService";
 interface Props {
   data: DietPlanResponse;
   questionnaire?: QuestionnaireData | null;
-  onSave: () => void;
+  onSave: (data?: DietPlanResponse) => void;
   isSaved: boolean;
   scanMode?: "full" | "face" | "hands";
   onDone: () => void;
@@ -41,42 +43,55 @@ interface Props {
 
 const NUTRIENT_DISPLAY_CONFIG: Record<
   string,
-  { label: string; unit: string; colorClass: string; icon?: React.ReactNode }
+  {
+    label: string;
+    unit: string;
+    colorClass: string;
+    icon?: React.ReactNode;
+    step?: number;
+  }
 > = {
   calories: {
     label: "Target Calories",
     unit: "kcal",
     colorClass: "bg-teal-50 border-teal-100 text-teal-800",
+    step: 10,
   },
   protein_g: {
     label: "Protein",
     unit: "g",
     colorClass: "bg-blue-50 border-blue-100 text-blue-800",
+    step: 1,
   },
   iron_mg: {
     label: "Iron",
     unit: "mg",
     colorClass: "bg-red-50 border-red-100 text-red-800",
+    step: 0.1,
   },
   vitaminB12_ug: {
     label: "Vitamin B12",
     unit: "µg",
     colorClass: "bg-purple-50 border-purple-100 text-purple-800",
+    step: 0.1,
   },
   vitaminD_IU: {
     label: "Vitamin D",
     unit: "IU",
     colorClass: "bg-yellow-50 border-yellow-100 text-yellow-800",
+    step: 10,
   },
   folate_ug: {
     label: "Folate",
     unit: "µg",
     colorClass: "bg-green-50 border-green-100 text-green-800",
+    step: 10,
   },
   zinc_mg: {
     label: "Zinc",
     unit: "mg",
     colorClass: "bg-slate-100 border-slate-200 text-slate-700",
+    step: 0.1,
   },
 };
 
@@ -86,7 +101,7 @@ const ResultsView: React.FC<Props> = ({
   onSave,
   isSaved,
   scanMode,
-  onDone
+  onDone,
 }) => {
   const [data, setData] = useState<DietPlanResponse>(initialData);
   const [activeTab, setActiveTab] = useState<"overview" | "plan" | "shopping">(
@@ -97,6 +112,12 @@ const ResultsView: React.FC<Props> = ({
     mealIndex: number;
   } | null>(null);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  // New state for editing goals
+  const [isEditingGoals, setIsEditingGoals] = useState(false);
+  const [editedTargets, setEditedTargets] = useState(
+    initialData.nutrientTargets
+  );
 
   const handleDoneClick = () => {
     if (!isSaved) {
@@ -112,7 +133,7 @@ const ResultsView: React.FC<Props> = ({
   };
 
   const handleSaveAndExit = () => {
-    onSave();
+    onSave(data);
     setShowUnsavedModal(false);
   };
 
@@ -191,6 +212,34 @@ const ResultsView: React.FC<Props> = ({
     }
   };
 
+  // Edit Goals Handlers
+  const handleEditGoals = () => {
+    setEditedTargets(data.nutrientTargets);
+    setIsEditingGoals(true);
+  };
+
+  const handleSaveGoals = () => {
+    setData((prev) => ({
+      ...prev,
+      nutrientTargets: editedTargets,
+    }));
+    setIsEditingGoals(false);
+  };
+
+  const handleCancelEditGoals = () => {
+    setEditedTargets(data.nutrientTargets);
+    setIsEditingGoals(false);
+  };
+
+  const handleTargetChange = (key: string, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue < 0) return; // Prevent negative numbers
+    setEditedTargets((prev) => ({
+      ...prev,
+      [key]: isNaN(numValue) ? null : numValue,
+    }));
+  };
+
   const renderNutrientCard = (
     key: string,
     value: number | null,
@@ -204,6 +253,7 @@ const ResultsView: React.FC<Props> = ({
       label: key,
       unit: "",
       colorClass: "bg-gray-50 text-gray-800",
+      step: 1,
     };
 
     return (
@@ -219,12 +269,29 @@ const ResultsView: React.FC<Props> = ({
           </span>
           {isMain && <CheckCircle size={16} className="opacity-50" />}
         </div>
-        <div className="text-3xl font-bold tracking-tight">
-          {displayValue}
-          <span className="text-lg font-medium ml-1 opacity-60">
-            {config.unit}
-          </span>
-        </div>
+
+        {isEditingGoals ? (
+          <div className="flex items-end gap-1">
+            <input
+              type="number"
+              min="0"
+              step={config.step || 1}
+              value={editedTargets[key as keyof typeof editedTargets] || ""}
+              onChange={(e) => handleTargetChange(key, e.target.value)}
+              className="w-full bg-white/50 border border-black/10 rounded px-2 py-1 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            <span className="text-sm font-medium opacity-60 mb-2">
+              {config.unit}
+            </span>
+          </div>
+        ) : (
+          <div className="text-3xl font-bold tracking-tight">
+            {displayValue}
+            <span className="text-lg font-medium ml-1 opacity-60">
+              {config.unit}
+            </span>
+          </div>
+        )}
       </div>
     );
   };
@@ -311,7 +378,7 @@ const ResultsView: React.FC<Props> = ({
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-3xl font-bold">Analysis Complete</h2>
           <button
-            onClick={onSave}
+            onClick={() => onSave(data)}
             disabled={isSaved}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
               isSaved
@@ -431,10 +498,37 @@ const ResultsView: React.FC<Props> = ({
 
             {/* Nutrient Targets */}
             <section className="bg-white p-8 rounded-xl shadow-lg border border-slate-100">
-              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <PieChartIcon className="text-teal-600" />
-                Daily Nutrient Targets (Recommended Daily Allowance)
-              </h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <PieChartIcon className="text-teal-600" />
+                  Daily Nutrient Targets
+                </h3>
+                {isEditingGoals ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancelEditGoals}
+                      className="px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveGoals}
+                      className="flex items-center gap-1 px-3 py-1 text-sm font-medium bg-teal-600 text-white hover:bg-teal-700 rounded-lg transition-colors shadow-sm"
+                    >
+                      <Save size={14} />
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleEditGoals}
+                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200"
+                  >
+                    <Edit2 size={14} />
+                    Edit Goals
+                  </button>
+                )}
+              </div>
               <p className="text-slate-500 mb-6 text-sm">
                 These targets are calculated based on your biometrics (Age, Sex,
                 Activity). The meal plan below averages to meet these goals over
@@ -466,7 +560,6 @@ const ResultsView: React.FC<Props> = ({
                   )}
               </div>
             </section>
-
           </div>
         )}
 
@@ -618,7 +711,7 @@ const ResultsView: React.FC<Props> = ({
 
       {/* Done Button */}
       <div className="mt-8">
-        <button 
+        <button
           onClick={handleDoneClick}
           className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         >
@@ -633,10 +726,13 @@ const ResultsView: React.FC<Props> = ({
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
             <div className="flex items-center gap-3 mb-4 text-amber-600">
               <AlertTriangle size={32} />
-              <h3 className="text-2xl font-bold text-slate-800">Unsaved Assessment</h3>
+              <h3 className="text-2xl font-bold text-slate-800">
+                Unsaved Assessment
+              </h3>
             </div>
             <p className="text-slate-600 mb-8">
-              You haven't saved your assessment results yet. Would you like to save them to your profile before exiting?
+              You haven't saved your assessment results yet. Would you like to
+              save them to your profile before exiting?
             </p>
             <div className="space-y-3">
               <button

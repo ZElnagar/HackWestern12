@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { 
-  AppState, 
-  QuestionnaireData, 
-  ImageCaptureSet, 
-  DietPlanResponse, 
-  User, 
-  PastAssessment, 
-  DailyCheckinData, 
-  DailyInsightResponse 
-} from './types';
-import CameraCapture from './components/CameraCapture';
-import QuestionnaireForm from './components/QuestionnaireForm';
-import ResultsView from './components/ResultsView';
-import AuthScreen from './components/AuthScreen';
-import ProfileButton from './components/ProfileButton';
-import ProfileHub from './components/ProfileHub';
-import Dashboard from './components/Dashboard';
-import DailyCheckinForm from './components/DailyCheckinForm';
-import DailyResultsView from './components/DailyResultsView';
-import { generateDietPlan, generateDailyInsight } from './services/geminiService';
-import { ScanFace, Loader2, LogIn } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  AppState,
+  QuestionnaireData,
+  ImageCaptureSet,
+  DietPlanResponse,
+  User,
+  PastAssessment,
+  DailyCheckinData,
+  DailyInsightResponse,
+} from "./types";
+import CameraCapture from "./components/CameraCapture";
+import QuestionnaireForm from "./components/QuestionnaireForm";
+import ResultsView from "./components/ResultsView";
+import AuthScreen from "./components/AuthScreen";
+import ProfileButton from "./components/ProfileButton";
+import ProfileHub from "./components/ProfileHub";
+import Dashboard from "./components/Dashboard";
+import DailyCheckinForm from "./components/DailyCheckinForm";
+import DailyResultsView from "./components/DailyResultsView";
+import {
+  generateDietPlan,
+  generateDailyInsight,
+} from "./services/geminiService";
+import { ScanFace, Loader2, LogIn } from "lucide-react";
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.LANDING);
@@ -28,36 +31,42 @@ const App: React.FC = () => {
     null
   );
   const [results, setResults] = useState<DietPlanResponse | null>(null);
-  const [dailyResults, setDailyResults] = useState<DailyInsightResponse | null>(null);
-  const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinData | null>(null);
+  const [dailyResults, setDailyResults] = useState<DailyInsightResponse | null>(
+    null
+  );
+  const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinData | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isResultSaved, setIsResultSaved] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
-  
+
   // Merged State
   const [scanMode, setScanMode] = useState<"full" | "face" | "hands">("face");
-  const [assessmentType, setAssessmentType] = useState<'full' | 'daily'>('full');
+  const [assessmentType, setAssessmentType] = useState<"full" | "daily">(
+    "full"
+  );
   const [skipQuestionnaire, setSkipQuestionnaire] = useState(false);
   const [showProfileChoiceModal, setShowProfileChoiceModal] = useState(false);
 
   const handleCameraComplete = (capturedImages: ImageCaptureSet) => {
     setImages(capturedImages);
-    
-    if (assessmentType === 'daily') {
+
+    if (assessmentType === "daily") {
       // Go to Daily Checkin Form instead of Questionnaire
-      setAppState(AppState.QUESTIONNAIRE); 
+      setAppState(AppState.QUESTIONNAIRE);
     } else {
       if (skipQuestionnaire && user?.currentProfile) {
         setQuestionnaire(user.currentProfile);
         performAnalysis(capturedImages, user.currentProfile);
       } else if (user?.currentProfile && !skipQuestionnaire) {
-         // If user has profile but didn't explicitly skip, we might want to pre-fill or just show form
-         // The logic from HEAD was: if user.currentProfile, use it. 
-         // The logic from Tristan was: ask user via modal before starting scan.
-         // If we are here, we either skipped or not.
-         // If not skipped, show form.
-         setAppState(AppState.QUESTIONNAIRE);
+        // If user has profile but didn't explicitly skip, we might want to pre-fill or just show form
+        // The logic from HEAD was: if user.currentProfile, use it.
+        // The logic from Tristan was: ask user via modal before starting scan.
+        // If we are here, we either skipped or not.
+        // If not skipped, show form.
+        setAppState(AppState.QUESTIONNAIRE);
       } else {
         setAppState(AppState.QUESTIONNAIRE);
       }
@@ -94,29 +103,36 @@ const App: React.FC = () => {
     }
   };
 
-  const performDailyAnalysis = async (imgs: ImageCaptureSet | null, checkin: DailyCheckinData) => {
+  const performDailyAnalysis = async (
+    imgs: ImageCaptureSet | null,
+    checkin: DailyCheckinData
+  ) => {
     setAppState(AppState.ANALYZING);
     setError(null);
 
     try {
       if (!imgs) throw new Error("No images captured");
-      
-      const insight = await generateDailyInsight(imgs, checkin, user?.currentProfile);
+
+      const insight = await generateDailyInsight(
+        imgs,
+        checkin,
+        user?.currentProfile
+      );
       setDailyResults(insight);
-      
+
       // Auto-save logic
       if (user) {
         const newAssessment: PastAssessment = {
           id: Date.now().toString(),
           date: new Date().toISOString(),
-          type: 'daily',
+          type: "daily",
           results: insight,
-          questionnaire: checkin
+          questionnaire: checkin,
         };
-        
+
         setUser({
           ...user,
-          history: [...user.history, newAssessment]
+          history: [...user.history, newAssessment],
         });
         setIsResultSaved(true);
         setShowSaveNotification(true);
@@ -171,31 +187,35 @@ const App: React.FC = () => {
     setIsResultSaved(false);
   };
 
-  const handleSaveAssessment = () => {
+  const handleSaveAssessment = (updatedResults?: DietPlanResponse) => {
     if (user && !isResultSaved) {
       let newAssessment: PastAssessment;
 
-      if (assessmentType === 'full' && results && questionnaire) {
-         newAssessment = {
-          id: Date.now().toString(),
-          date: new Date().toISOString(),
-          type: 'full',
-          results: results,
-          questionnaire: questionnaire,
-          scanType: scanMode
-        };
-      } else if (assessmentType === 'daily' && dailyResults && dailyCheckin) {
+      if (
+        assessmentType === "full" &&
+        (updatedResults || results) &&
+        questionnaire
+      ) {
         newAssessment = {
           id: Date.now().toString(),
           date: new Date().toISOString(),
-          type: 'daily',
+          type: "full",
+          results: updatedResults || results!,
+          questionnaire: questionnaire,
+          scanType: scanMode,
+        };
+      } else if (assessmentType === "daily" && dailyResults && dailyCheckin) {
+        newAssessment = {
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          type: "daily",
           results: dailyResults,
-          questionnaire: dailyCheckin
+          questionnaire: dailyCheckin,
         };
       } else {
         return;
       }
-      
+
       setUser({
         ...user,
         history: [...user.history, newAssessment],
@@ -212,14 +232,14 @@ const App: React.FC = () => {
   };
 
   const handleViewAssessment = (assessment: PastAssessment) => {
-    if (assessment.type === 'daily') {
+    if (assessment.type === "daily") {
       setDailyResults(assessment.results as DailyInsightResponse);
       setDailyCheckin(assessment.questionnaire as DailyCheckinData);
-      setAssessmentType('daily');
+      setAssessmentType("daily");
     } else {
       setResults(assessment.results as DietPlanResponse);
       setQuestionnaire(assessment.questionnaire as QuestionnaireData);
-      setAssessmentType('full');
+      setAssessmentType("full");
       setScanMode(assessment.scanType || "face");
     }
     setIsResultSaved(true);
@@ -228,14 +248,15 @@ const App: React.FC = () => {
 
   const isDailyDoneToday = () => {
     if (!user) return false;
-    return user.history.some(a => 
-      a.type === 'daily' && 
-      new Date(a.date).toDateString() === new Date().toDateString()
+    return user.history.some(
+      (a) =>
+        a.type === "daily" &&
+        new Date(a.date).toDateString() === new Date().toDateString()
     );
   };
 
   const startDailyScan = () => {
-    setAssessmentType('daily');
+    setAssessmentType("daily");
     setAppState(AppState.CAMERA);
   };
 
@@ -243,7 +264,7 @@ const App: React.FC = () => {
     if (user?.currentProfile) {
       setShowProfileChoiceModal(true);
     } else {
-      setAssessmentType('full');
+      setAssessmentType("full");
       setSkipQuestionnaire(false);
       setAppState(AppState.CAMERA);
     }
@@ -296,7 +317,7 @@ const App: React.FC = () => {
         );
 
       case AppState.QUESTIONNAIRE:
-        if (assessmentType === 'daily') {
+        if (assessmentType === "daily") {
           return <DailyCheckinForm onSubmit={handleDailyCheckinSubmit} />;
         }
         return <QuestionnaireForm onSubmit={handleQuestionnaireSubmit} />;
@@ -304,7 +325,12 @@ const App: React.FC = () => {
       case AppState.AUTH:
         // If coming from landing page (no images/questionnaire), default to login
         // Otherwise, default to signup for new users in the flow
-        return <AuthScreen onComplete={handleAuthComplete} defaultMode={!images && !questionnaire ? 'login' : 'signup'} />;
+        return (
+          <AuthScreen
+            onComplete={handleAuthComplete}
+            defaultMode={!images && !questionnaire ? "login" : "signup"}
+          />
+        );
 
       case AppState.DASHBOARD:
         return (
@@ -350,8 +376,13 @@ const App: React.FC = () => {
         );
 
       case AppState.RESULTS:
-        if (assessmentType === 'daily' && dailyResults) {
-          return <DailyResultsView data={dailyResults} onDone={() => setAppState(AppState.PROFILE)} />;
+        if (assessmentType === "daily" && dailyResults) {
+          return (
+            <DailyResultsView
+              data={dailyResults}
+              onDone={() => setAppState(AppState.PROFILE)}
+            />
+          );
         }
         return results ? (
           <ResultsView
@@ -437,47 +468,63 @@ const App: React.FC = () => {
         </div>
       )}
 
-       {/* Profile Choice Modal */}
-       {showProfileChoiceModal && (
-         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
-           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100 relative">
-             <button 
-               onClick={() => setShowProfileChoiceModal(false)}
-               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-             >
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-             </button>
-             <h3 className="text-2xl font-bold text-slate-800 mb-4">Use Existing Profile?</h3>
-             <p className="text-slate-600 mb-6">
-               We have your health profile on file. Would you like to use it for this assessment, or update it with new information?
-             </p>
-             <div className="space-y-3">
-               <button
-                 onClick={() => {
-                   setSkipQuestionnaire(true);
-                   setAssessmentType('full');
-                   setAppState(AppState.CAMERA);
-                   setShowProfileChoiceModal(false);
-                 }}
-                 className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md"
-               >
-                 Use Current Profile
-               </button>
-               <button
-                 onClick={() => {
-                   setSkipQuestionnaire(false);
-                   setAssessmentType('full');
-                   setAppState(AppState.CAMERA);
-                   setShowProfileChoiceModal(false);
-                 }}
-                 className="w-full bg-white border-2 border-slate-200 hover:border-teal-600 text-slate-700 hover:text-teal-600 font-bold py-3 rounded-xl transition-colors"
-               >
-                 Update Profile
-               </button>
-             </div>
-           </div>
-         </div>
-       )}
+      {/* Profile Choice Modal */}
+      {showProfileChoiceModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100 relative">
+            <button
+              onClick={() => setShowProfileChoiceModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <h3 className="text-2xl font-bold text-slate-800 mb-4">
+              Use Existing Profile?
+            </h3>
+            <p className="text-slate-600 mb-6">
+              We have your health profile on file. Would you like to use it for
+              this assessment, or update it with new information?
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setSkipQuestionnaire(true);
+                  setAssessmentType("full");
+                  setAppState(AppState.CAMERA);
+                  setShowProfileChoiceModal(false);
+                }}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md"
+              >
+                Use Current Profile
+              </button>
+              <button
+                onClick={() => {
+                  setSkipQuestionnaire(false);
+                  setAssessmentType("full");
+                  setAppState(AppState.CAMERA);
+                  setShowProfileChoiceModal(false);
+                }}
+                className="w-full bg-white border-2 border-slate-200 hover:border-teal-600 text-slate-700 hover:text-teal-600 font-bold py-3 rounded-xl transition-colors"
+              >
+                Update Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
