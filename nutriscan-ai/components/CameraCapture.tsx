@@ -19,7 +19,8 @@ const FACE_STEPS = [
   {
     id: "front",
     label: "Front Face",
-    instruction: "Look directly at the camera. Remove any glasses. Ensure good lighting.",
+    instruction:
+      "Look directly at the camera. Remove any glasses. Ensure good lighting.",
   },
   {
     id: "left",
@@ -125,16 +126,36 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Resize logic for faster analysis
+    const MAX_DIMENSION = 640; // Reduced for speed
+    let width = video.videoWidth;
+    let height = video.videoHeight;
+
+    if (width > height) {
+      if (width > MAX_DIMENSION) {
+        height = Math.round(height * (MAX_DIMENSION / width));
+        width = MAX_DIMENSION;
+      }
+    } else {
+      if (height > MAX_DIMENSION) {
+        width = Math.round(width * (MAX_DIMENSION / height));
+        height = MAX_DIMENSION;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
 
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      // Draw normally without mirroring
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Mirror the image to match the user-facing camera view
+      ctx.translate(width, 0);
+      ctx.scale(-1, 1);
+
+      ctx.drawImage(video, 0, 0, width, height);
 
       // Use JPEG to ensure consistent mime type for the API
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
 
       // Safely access the step ID
       if (currentStep >= 0 && currentStep < steps.length) {
@@ -248,6 +269,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             playsInline
             muted
             onCanPlay={handleVideoCanPlay}
+            style={{ transform: "scaleX(-1)" }}
             className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
               videoReady ? "opacity-100" : "opacity-0"
             }`}
@@ -269,7 +291,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               // Hand Guide
               <>
                 <div className="relative w-[75%] h-[85%] border-2 border-dashed border-white/70 rounded-3xl box-border shadow-[0_0_15px_rgba(0,0,0,0.3)] flex items-center justify-center">
-                    <Hand size={200} strokeWidth={1} className="text-white/50" />
+                  <Hand size={200} strokeWidth={1} className="text-white/50" />
                 </div>
               </>
             ) : (
@@ -277,10 +299,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               <>
                 {/* Center Crosshair - using flex centering wrapper to ensure they cross in middle */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full border-t border-white/20"></div>
+                  <div className="w-full border-t border-white/20"></div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-full border-l border-white/20"></div>
+                  <div className="h-full border-l border-white/20"></div>
                 </div>
 
                 {/* Oval Shape */}
