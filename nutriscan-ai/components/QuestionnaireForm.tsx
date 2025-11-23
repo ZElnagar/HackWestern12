@@ -40,6 +40,10 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
     const { name, value } = e.target;
     
     if (name === 'age' || name === 'weeklyBudget') {
+        // Only allow positive integers for age
+        if (name === 'age') {
+          if (value !== '' && (!/^\d+$/.test(value) || Number(value) < 0)) return;
+        }
         setFormData(prev => ({
           ...prev,
           [name]: value === '' ? '' : Number(value)
@@ -50,6 +54,9 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
     // Handle metric inputs
     if (unitSystem === 'metric') {
       if (name === 'weightKg' || name === 'heightCm') {
+        // Only allow positive numbers (integer or decimal)
+        if (value !== '' && (!/^\d*\.?\d*$/.test(value) || Number(value) < 0)) return;
+        
         setFormData(prev => ({
           ...prev,
           [name]: value === '' ? '' : Number(value)
@@ -80,6 +87,10 @@ const QuestionnaireForm: React.FC<Props> = ({ onSubmit }) => {
 
   const handleImperialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    // Only allow positive numbers for imperial inputs
+    if (value !== '' && (!/^\d*\.?\d*$/.test(value) || Number(value) < 0)) return;
+
     const numValue = value === '' ? '' : Number(value);
 
     setImperialData(prev => {

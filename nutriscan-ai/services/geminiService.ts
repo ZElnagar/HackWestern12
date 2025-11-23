@@ -120,8 +120,31 @@ export const generateDietPlan = async (
     ` : '- No wearable data provided; rely on self-reported activity level.'}
 
     **CALORIC CALCULATION INSTRUCTION**:
-    - Use the **Katch-McArdle Formula** to calculate the basal metabolic rate (BMR) if body fat percentage is estimable from visual analysis or BMI. Otherwise, use the **Mifflin-St Jeor Equation**.
-    - **CRITICAL**: Ensure the caloric target accounts for the activity level provided (Sedentary: 1.2, Light: 1.375, Moderate: 1.55, Active: 1.725, Very Active: 1.9).
+    - **STEP 1: Calculate BMR** using the **Mifflin-St Jeor Equation**:
+      - Men: (10 × weight in kg) + (6.25 × height in cm) - (5 × age in years) + 5
+      - Women: (10 × weight in kg) + (6.25 × height in cm) - (5 × age in years) - 161
+    - **STEP 2: Apply Activity Multiplier** (TDEE):
+      - Sedentary (little/no exercise): BMR x 1.2
+      - Lightly active (light exercise 1-3 days/week): BMR x 1.375
+      - Moderately active (moderate exercise 3-5 days/week): BMR x 1.55
+      - Active (hard exercise 6-7 days/week): BMR x 1.725
+      - Very active (physical job or hard exercise): BMR x 1.9
+    - **STEP 3: Weight Management Adjustment**:
+      - Calculate the patient's BMI (Weight kg / Height m^2).
+      - **If Overweight (BMI 25-29.9) or Obese (BMI > 30)**: SUBTRACT 250-500 kcal from TDEE to support gradual, safe weight loss.
+      - **If Underweight (BMI < 18.5)**: ADD 250-500 kcal to TDEE to support healthy weight gain.
+      - **If Normal Weight**: Maintain TDEE.
+      - **CRITICAL**: Return the FINAL adjusted value as the 'calories' target in the JSON.
+
+    **MACRO CALCULATION INSTRUCTION**:
+    - Once the target calories are determined, calculate the macro targets:
+      - **Protein**:
+        - For Men: 0.8g per pound of body weight (approx 1.76g per kg).
+        - For Women: 0.65g per pound of body weight (approx 1.4g per kg).
+        - Calculation: (Weight in kg * 1.76) = grams of protein.
+      - **Fats**: 30% of Total Calories. ((Total Calories * 0.30) / 9) = grams of fat.
+      - **Carbohydrates**: Remaining calories. ((Total Calories - (Protein_g * 4) - (Fat_g * 9)) / 4) = grams of carbs.
+    - Return these calculated gram values in the 'nutrientTargets' object.
 
     **BUDGET CONSTRAINT (CRITICAL)**:
     - The patient has a strict weekly grocery budget of **$${data.weeklyBudget} CAD**.

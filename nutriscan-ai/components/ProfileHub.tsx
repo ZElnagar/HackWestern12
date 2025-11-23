@@ -82,7 +82,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({
         className="flex items-center gap-2 text-slate-500 hover:text-teal-600 transition-colors font-medium"
       >
         <LayoutDashboard size={20} />
-        Back to Dashboard
+        Assessment Hub
       </button>
 
       {/* Header Section */}
