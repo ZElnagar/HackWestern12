@@ -89,10 +89,10 @@ export interface DietPlanResponse {
   nutritionScore: {
     total: number; // 0-100
     breakdown?: {
-      protein: number; // 0-100
-      vitamins: number; // 0-100
+      skin: number; // 0-100
+      bmi: number; // 0-100
+      sleep: number; // 0-100
       hydration: number; // 0-100
-      calories: number; // 0-100
     };
     handBreakdown?: {
       keratinStrength: number;

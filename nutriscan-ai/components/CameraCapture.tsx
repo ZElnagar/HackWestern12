@@ -196,6 +196,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   };
 
   const handleFinish = () => {
+    // Stop camera stream before completing
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null); // Optional but good for cleanup state
+    }
+
     if (mode === "hands") {
       // For hands, at least one hand should be captured
       if (captures.left || captures.right) {

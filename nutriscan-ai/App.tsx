@@ -18,6 +18,7 @@ import ProfileHub from "./components/ProfileHub";
 import Dashboard from "./components/Dashboard";
 import DailyCheckinForm from "./components/DailyCheckinForm";
 import DailyResultsView from "./components/DailyResultsView";
+import ChatAssistant from "./components/ChatAssistant";
 import {
   generateDietPlan,
   generateDailyInsight,
@@ -722,6 +723,12 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Chat Assistant - Always Visible */}
+      <ChatAssistant 
+        results={results} 
+        questionnaire={questionnaire || user?.currentProfile || null} 
+      />
     </div>
   );
 };

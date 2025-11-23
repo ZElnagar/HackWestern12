@@ -13,12 +13,12 @@ export const RESPONSE_SCHEMA: Schema = {
         breakdown: {
           type: Type.OBJECT,
           properties: {
-            protein: { type: Type.NUMBER, description: "0-100 score for protein intake/status" },
-            vitamins: { type: Type.NUMBER, description: "0-100 score for vitamin status based on visual signs" },
-            hydration: { type: Type.NUMBER, description: "0-100 score for hydration status" },
-            calories: { type: Type.NUMBER, description: "0-100 score for caloric balance" }
+            skin: { type: Type.NUMBER, description: "0-100 score for skin health" },
+            bmi: { type: Type.NUMBER, description: "0-100 score for BMI/Weight management" },
+            sleep: { type: Type.NUMBER, description: "0-100 score for sleep quality indicators" },
+            hydration: { type: Type.NUMBER, description: "0-100 score for hydration status" }
           },
-          required: ["protein", "vitamins", "hydration", "calories"]
+          required: ["skin", "bmi", "sleep", "hydration"]
         },
         handBreakdown: {
           type: Type.OBJECT,

@@ -143,9 +143,9 @@ export const generateDietPlan = async (
       - **Protein**:
         - For Men: 0.8g per pound of body weight (approx 1.76g per kg).
         - For Women: 0.65g per pound of body weight (approx 1.4g per kg).
-        - Calculation: (Weight in kg * 1.76) = grams of protein.
+        - Calculation: (Weight in kg * 1.76) + 15 = grams of protein.
       - **Fats**: 30% of Total Calories. ((Total Calories * 0.30) / 9) = grams of fat.
-      - **Carbohydrates**: Remaining calories. ((Total Calories - (Protein_g * 4) - (Fat_g * 9)) / 4) = grams of carbs.
+      - **Carbohydrates**: Remaining calories. ((Total Calories - (Protein_g * 4) - (Fat_g * 9)) / 4) - 40 = grams of carbs.
     - Return these calculated gram values in the 'nutrientTargets' object.
 
     **BUDGET CONSTRAINT (CRITICAL)**:
@@ -157,7 +157,7 @@ export const generateDietPlan = async (
     - **The Meal Plan MUST be realistic for this budget.**
 
     Task:
-    1. **Interpretation**: Identify up to 3 key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
+    1. **Interpretation**: Identify **at least 2 and up to 3** key visual findings that correlate with potential nutritional deficits. State the specific visual evidence.
        - **CRITICAL**: For EACH finding, provide a specific, actionable recommendation in the 'recommendedLabsOrReferral' field. 
        - If the finding is minor (e.g., dry lips), recommend a lifestyle change (e.g., "Increase water intake to 2.5L/day").
        - If the finding is medical/severe, recommend a lab test or doctor visit.
@@ -172,10 +172,10 @@ export const generateDietPlan = async (
        - **circulation**: High = good circulation. Low = poor circulation signs.
        ` : `
        Also provide breakdown scores (0-100) for:
-       - **Protein**: Based on muscle mass signs (temporal wasting) vs healthy structure.
-       - **Vitamins**: Based on skin/eye health (pallor, dryness, etc).
-       - **Hydration**: Based on skin turgor/dryness signs.
-       - **Calories**: Based on weight/BMI and facial fat levels.
+       - **Skin**: Based on texture, clarity, pallor, and acne signs.
+       - **BMI**: Based on weight management status (healthy range = high score).
+       - **Sleep**: Based on dark circles, eye puffiness, and wearable data if available.
+       - **Hydration**: Based on skin turgor, lip dryness, and texture.
        `}
 
     3. **Plan**: Using the questionnaire constraints (allergies, religiousRestrictions, medications), produce:
@@ -238,7 +238,7 @@ export const generateDietPlan = async (
 export const sendChatMessage = async (
     history: ChatMessage[], 
     currentMessage: string,
-    contextData: { questionnaire: QuestionnaireData, results: DietPlanResponse }
+    contextData: { questionnaire: QuestionnaireData | null, results: DietPlanResponse | null }
 ): Promise<string> => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
     if (!apiKey) {
@@ -247,17 +247,25 @@ export const sendChatMessage = async (
     const genAI = new GoogleGenerativeAI(apiKey);
     
     const systemInstruction = `
-        You are the NutriScan AI Assistant. You have just completed a visual health analysis and diet plan generation for a user.
+        You are the NutriScan AI Assistant.
         
+        ${contextData.results ? `
+        You have just completed a visual health analysis and diet plan generation for a user.
         Here is the User's Context:
         - Questionnaire: ${JSON.stringify(contextData.questionnaire)}
         - Analysis & Diet Plan Results: ${JSON.stringify(contextData.results)}
         - **Location Context**: Ontario, Canada.
-        - **Budget**: $${contextData.questionnaire.weeklyBudget} CAD / week.
+        - **Budget**: $${contextData.questionnaire?.weeklyBudget || 'N/A'} CAD / week.
         
         Your Goal:
         Answer the user's follow-up questions regarding their results, the specific food recommendations, or general nutrition.
-        - Explain *why* specific foods were recommended based on their scan (e.g., "I recommended spinach because the scan showed pallor indicating potential low iron").
+        - Explain *why* specific foods were recommended based on their scan.
+        ` : `
+        You are a helpful nutrition assistant. The user has not completed an analysis yet, or is navigating the app.
+        Answer general questions about nutrition, health, and diet.
+        Encourage them to complete a scan for personalized advice.
+        `}
+        
         - If they ask about prices, quote estimates based on Ontario, Canada grocery prices.
         - Be encouraging, evidence-based, and concise.
         - If they ask about medical diagnoses, remind them you are an AI assistant and they should see a doctor.
@@ -269,7 +277,21 @@ export const sendChatMessage = async (
     });
 
     // Reconstruct history for the API
-    const historyForApi = history.map(h => ({
+    // Gemini API requires history to start with a 'user' role.
+    // We filter out any initial model messages (like the greeting).
+    let apiHistory = history.filter((h, index) => {
+      if (index === 0 && h.role === 'model') return false;
+      return true;
+    });
+
+    // Ensure alternation (User -> Model -> User -> Model) if needed, 
+    // but usually just ensuring it starts with User is enough for the SDK to handle or throw specific error.
+    // Simple sanitization: if still starts with model (e.g. user deleted messages), remove it.
+    if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
+        apiHistory.shift();
+    }
+
+    const historyForApi = apiHistory.map(h => ({
         role: h.role,
         parts: [{ text: h.text }]
     }));

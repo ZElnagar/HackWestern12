@@ -32,7 +32,6 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import ChatAssistant from "./ChatAssistant";
 import HealthRing from "./HealthRing";
 import { swapMeal } from "../services/geminiService";
 
@@ -514,9 +513,6 @@ const ResultsView: React.FC<Props> = ({
 
   return (
     <div className="w-full max-w-6xl mx-auto pb-20 relative">
-      {/* Chat Assistant Integration */}
-      <ChatAssistant results={data} questionnaire={questionnaire || null} />
-
       {/* Nutrition Score Section */}
       {hasScore && (
         <div className="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-slate-100">
@@ -587,24 +583,24 @@ const ResultsView: React.FC<Props> = ({
               ) : (
                 <>
                   <HealthRing
-                    score={data.nutritionScore.breakdown?.protein || 0}
-                    label="Protein"
+                    score={data.nutritionScore.breakdown?.skin || 0}
+                    label="Skin"
                     color="#3b82f6" // Blue
                   />
                   <HealthRing
-                    score={data.nutritionScore.breakdown?.vitamins || 0}
-                    label="Vitamins"
+                    score={data.nutritionScore.breakdown?.bmi || 0}
+                    label="BMI"
                     color="#8b5cf6" // Purple
+                  />
+                  <HealthRing
+                    score={data.nutritionScore.breakdown?.sleep || 0}
+                    label="Sleep"
+                    color="#f97316" // Orange
                   />
                   <HealthRing
                     score={data.nutritionScore.breakdown?.hydration || 0}
                     label="Hydration"
                     color="#06b6d4" // Cyan
-                  />
-                  <HealthRing
-                    score={data.nutritionScore.breakdown?.calories || 0}
-                    label="Calories"
-                    color="#f97316" // Orange
                   />
                 </>
               )}
