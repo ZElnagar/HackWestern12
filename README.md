@@ -16,7 +16,7 @@ Over the weekend, our team won:
 - Clean, Accessible UI: Built with modern frontend tooling.
 
 **The Problem**
-Students often sacrifice health and nutrition for deadlines. Early signs of poor nutrition show up physically — pale skin, brittle nails, fatigue cues — but most of us don’t know how to interpret them. This leads to burnout, poor energy, and long-term health issues.
+Students often sacrifice health and nutrition for deadlines. Early signs of poor nutrition show up physically -> pale skin, brittle nails, fatigue cues, but most of us don’t know how to interpret them. This leads to burnout, poor overall energy, and long-term health issues.
 
 **Our Solution**
 NutriScan AI turns a basic photo into actionable insight.
@@ -46,3 +46,6 @@ AI + Backend
 
 **Deployment:**
 DigitalOcean
+
+**Test Out Live At** 
+https://nutriscans.tech
