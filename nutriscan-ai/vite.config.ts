@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
     }
 
     return {
+      base: '/HackWestern12/',
       server: {
         port: 3000,
         host: '0.0.0.0',
